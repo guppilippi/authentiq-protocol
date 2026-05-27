@@ -656,6 +656,16 @@ A kapu DAO chrome-szerepe a protokoll-szintű interakciókhoz. A felsorolt funkc
 - WebAuthn biometrikus megerősítés (2FA)
 - Kisebb blast radius: wallet kompromittálódás ≠ szerver hozzáférés
 
+### 14.10. RPC biztonsági réteg (tervezett)
+
+Három összetartozó mechanizmus, a hedged requests-szel együtt alkot teljes RPC biztonsági réteget:
+
+**Chain ID ellenőrzés + cache**: minden RPC forráson chain ID egyeztetés az elvárt értékkel. Egyszer ellenőrzött forrás cache-elt eredményt használ ésszerű TTL-ig.
+
+**Lastblock check**: frissességi szűrő. A jelentősen lemaradó (stale) node-ok kiszűrése a legutolsó blokk számának összehasonlításával — lemaradt forrás nem vesz részt a feloldásban.
+
+**Quorum**: több RPC forrás eredményének egyeztetése. Alapkonfiguráció: 3 forrás, 2 egyezés. Magasabb biztonsághoz: 5 forrás, 3 egyezés. A források egymástól független providerektől érkeznek (külön szolgáltató, saját node, publikus RPC).
+
 ---
 
 ## 15. Perzisztencia és GC
@@ -708,6 +718,18 @@ Cache a hívó DAO `cacheable` flag-jétől függ; a hivatkozott DAO-k tartalmá
 
 ### 16.5. Kód- és architektúra-evolúció
 - capability modulok szétválasztása
+
+### 16.6. Eszköz capability-k (tervezett)
+
+A sandboxolt page iframe közvetlenül nem fér hozzá az eszköz API-khoz. A loader a postMessage buzon proxyzza ezeket a hívásokat — a felhasználói engedélyt a loader kéri, nem a page sandbox.
+
+Tervezett capability-k:
+- **Vágólap**: olvasás és írás (`aq.clipboard.read`, `aq.clipboard.write`)
+- **Kamera**: képrögzítés, QR scan (`aq.camera.*`)
+- **GPS**: koordináta lekérdezés (`aq.geo.getPosition`)
+- **NFC**: olvasás és írás (`aq.nfc.*`)
+
+Az iframe `sandbox` és `allow` attribútumai a szükséges capability-kre bővítendők capability-nként.
 
 ---
 
@@ -826,6 +848,30 @@ A WEB2 szerver HTTPS-en fut, a fejlesztői kapu DAO ugyanonnan töltődik. Nincs
 
 ---
 
+## 20. Identitás DAO alatti megosztott storage
+
+Az identitás DAO alá tartozó funkció DAO-k közös névtéren keresztül koordinálhatnak egymással.
+
+### 20.1. Koordinációs csatorna
+
+A megosztott storage nem általános cross-DAO olvasás/írás — az identitás DAO definiálja a névteret és a hozzáférési jogosultságokat. A funkció DAO-k ezen a csatornán jelzéseket és adatokat oszthatnak meg egymással.
+
+**Trigger-alapú működés**: bizonyos folyamatok vagy jelzések csak akkor indulnak el, ha a megfelelő adatok megjelennek a megosztott névtérben. Ez laza csatolású, event-driven koordinációt tesz lehetővé a funkció DAO-k között.
+
+### 20.2. Kapcsolat a protokollal
+
+A megosztott storage-hozzáférés az identitás DAO szabadsági fokához és a funkció DAO-k `exports`/`refs` kapcsolatához kötött. A protokoll adatszerkezetet és hozzáférési felületet biztosít; a jogosultsági logika funkció DAO szintű.
+
+---
+
+## 21. Értékmátrix (tervezett, pontosítandó)
+
+Identitás DAO-k és funkció DAO-k összekapcsolásához és ajánlásához szükséges mechanizmus. A DAO-k kulcsszavakkal (pl. kategóriák: `js`, `css`, vagy egyéb domain-specifikus címkék) jellemzik magukat; az értékmátrix ezek alapján vezet le illeszkedési és ajánlási logikát.
+
+A konkrét fogalom és képlet még pontosítandó.
+
+---
+
 ## Completed
 
 - DAO-scoped storage capability
@@ -888,4 +934,9 @@ A WEB2 szerver HTTPS-en fut, a fejlesztői kapu DAO ugyanonnan töltődik. Nincs
 - Dedikált snapshot wallet BIP-44 derivation path konkrét értéke
 - Identitás DAO periodikus kiírás: gyakoriság, trigger logika, titkosítási formátum
 - Kritikus lépés jelölés formátum a DAO config-ban
-- RPC hedged requests: ha több RPC URL elérhető, async (nem egyszerre) indított, sorrend-fix alap delay/timeout-tal, válaszok függvényében változó multi-source validation.
+- RPC hedged requests: ha több RPC URL elérhető, async (nem egyszerre) indított, sorrend-fix alap delay/timeout-tal, válaszok függvényében változó prioritás (lásd §14.10).
+- **Chain ID ellenőrzés + cache** (§14.10): minden RPC forráson chain ID validáció, cache TTL-lel.
+- **Lastblock check** (§14.10): stale RPC szűrés blokk-szám összehasonlítással.
+- **Quorum** (§14.10): 3 forrás / 2 egyezés alapkonfig, független providerekkel.
+- **Eszköz capability-k** (§16.6): clipboard, kamera, GPS, NFC — postMessage proxyn, loader kéri az engedélyt.
+- **Megosztott identitás DAO storage** (§20): funkció DAO-k koordinációs csatornája, trigger-alapú működéssel.
