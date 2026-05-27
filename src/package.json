@@ -1,0 +1,12 @@
+{
+  "name": "aq-protocol-build",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.config.js --minify",
+    "watch": "node esbuild.config.js --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}
