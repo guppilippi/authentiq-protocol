@@ -30,9 +30,3 @@ Amit DOCSYNC során doksiba viszünk: törlendő innen. A doksi az elsődleges f
 - Szintezett csökkenő súllyal: protokoll DAO közvetlen 1.0, 1. szint 0.8, 2. szint 0.6, stb.
 - Kapu DAO: teljes egészében protokoll-auditált (nincs privát funkció).
 
-## Seed store tervezési döntések (ellenőrizendő DOCSYNC-ben — Guide §?)
-
-- Külön IndexedDB adatbázis (`aqSeed`, v1), nem az `aqStorage`-dzsal közös. Szándékos szeparáció — a seed belső, loader-korlátozott forrás.
-- A kapu DAO **nem olvashatja vissza** a seed rekordot (`seedGetInternal` csak loader belső kód számára). Csak jelenlét (`exists`) ellenőrizhető és új rekord menthető (`store`).
-- Ha seed már létezik, a `seedStore` hibát ad — nem írható felül. Szándékos: felülírás = adatvesztés kockázat.
-- A `storedAt: Date.now()` automatikusan hozzáadódik mentéskor.

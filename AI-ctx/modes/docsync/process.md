@@ -42,7 +42,7 @@ A szinkron részeként át kell nézni az `accepted.txt`-t: ami azóta doksiba k
 
 1. `doc_sync_pending.md` kiürítése kötelező — tartalom: `_(üres — nincs függő változás)_`
 2. `runtime/changelog.md` karbantartás: utolsó 3-4 bejegyzés-blokk marad, régebbiek törlődnek
-3. Git commit javasolt (az új git workflow szerint a főprojektből)
+3. Git commit kötelező (az új git workflow szerint a főprojektből)
 
 ---
 

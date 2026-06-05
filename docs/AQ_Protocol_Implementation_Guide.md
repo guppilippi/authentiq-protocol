@@ -210,7 +210,7 @@ A `loadDaoConfig` a betöltött configot szigorúan validálja (`validateDaoConf
 ### 5.1. DAO config validáció
 
 Validált mezők (jelenlegi kódállapot):
-- **`refs`** (opcionális, 2-szintű): `refs[category][subcategory][name] = leaf`. Engedett kategóriák: `js`, `css`, `json`, `html`, `others`. Minden levél objektum:
+- **`refs`** (opcionális, 2-szintű): `refs[category][subcategory][name] = leaf`. Engedett kategóriák: `js`, `css`, `json`, `html`, `img`, `others`. Minden levél objektum:
   - lokális: `{cid, description}` (description **kötelező**, plain szöveg) vagy `{path, description}` (devMode-only)
   - távoli: `{tokenName}` — részletek §2.2-ben
   - `validateRefsLeaf` a típus alapján ágazik lokális és távoli ágra
@@ -707,7 +707,7 @@ Példa: `["0x4fe481e8df86f415ffd5476ce6cfc15439234077"]`
 | Metódus | Leírás |
 |---|---|
 | `eth_call` | TokenId → CID feloldás (read-only, auth nélkül) |
-| `aqMintToken` | Új token allokálás; auto-incrementáló, 1-től indul (0 kihagyva) |
+| `aqMintToken` | Új token allokálás; auto-incrementáló, 100-tól indul (0–99 rezervált) |
 | `aqSetSwarmHash` | TokenId → CID beállítás (owner ellenőrzés) |
 
 ### 13.4. TokenId ownership
@@ -833,7 +833,9 @@ Seed elvesztésekor nincs automatizált recovery — tervezett elem (Plan).
 
 ## 17. Wallet deriváció és store
 
-### 17.1. Wallet deriváció (`aqWalletDerive.js`)
+Implementáció: `aqKeyring.js` (seed/session/wallet funkciók egyetlen modulban — lásd §15, §19).
+
+### 17.1. Wallet deriváció
 
 Két export:
 
@@ -844,7 +846,7 @@ Visszatérési érték: `{ address, sign(msg) }` — a privát kulcs zárt closu
 
 Függőség: `ethers ^6.0.0` (`loader/package.json` dependencies).
 
-### 17.2. Wallet config (`aqWalletConfig.js`)
+### 17.2. Wallet config
 
 `WALLET_DEFS` (frozen):
 
@@ -858,9 +860,7 @@ Függőség: `ethers ^6.0.0` (`loader/package.json` dependencies).
 - **sticky**: első használatkor véletlenszerű index a range-ben, majd IndexedDB-ben eltárolódik.
 - **oneshot**: minden operációnál a következő index (`counter + 1`), counter IndexedDB-ben perzisztál.
 
-### 17.3. Wallet store (`aqWalletStore.js`)
-
-Két export:
+### 17.3. Wallet store
 
 **`getWallet(key, seedInput)`** → `{ address, sign }`
 - `seedInput`: `Uint8Array` (raw seed) → `fromRawSeed`, string → `fromMnemonic`.
@@ -872,6 +872,11 @@ Két export:
 - Csak az eltárolt address olvasása, seed nélkül.
 - Oneshot esetén `null` (address nem cache-elődik).
 
+**`getWalletAddresses()`** → `{ [key]: address | null }`
+- Seed szükséges (`_unlockedSeed`). Fix wallet-eknél seed-ből derivál, sticky-nél IndexedDB-ből olvas.
+- Oneshot wallet-ek nem szerepelnek (nincs cache-elt cím).
+- Nincs PWA / devMode korlát — a cím nem érzékeny adat.
+
 IndexedDB kulcsformátum: `wallet.<key>` a `_protocol` namespace-ben.
 
 **Érzékeny adat kezelése:**
@@ -880,35 +885,164 @@ IndexedDB kulcsformátum: `wallet.<key>` a `_protocol` namespace-ben.
 
 ---
 
-## 18. DevMode hamburger menü (`aqDevMenu.js`)
+## 18. Host hamburger menü (`aqHostMenu.js`)
 
-Kizárólag devMode-ban aktív. Az `aqProtocolLoader.js` hívja `initDevMenu()`-t, ha `devMode === true`.
+Mindig aktív — devMode és production egyaránt. Az `aqProtocolLoader.js` hívja `initHostMenu()`-t a tartalmi DAO betöltése után.
 
 ### 18.1. UI struktúra
 
 - **☰ gomb** (jobb felső sarok, `z-index: 100000`): toggleli a panel megnyitását. Ha bármi nyitva van, bezár mindent.
 - **Panel** (`z-index: 99999`): dropdown, menüpontok listája.
+  - Mindig: **Wallet**
+  - devMode: **Publish Gate**, **Refresh Protocol**, **Clear IndexedDB**
+  - Production: **Fork DAO**
 - **Dialog** (`z-index: 99999`): a kiválasztott műveletet reprezentáló form, a panel helyett jelenik meg.
 - **Backdrop** (`z-index: 99997`): transzparens, pointer-events:auto fedőréteg — kattintásra mindent zár. Blokkolja az iframe interakciót amíg panel/dialog nyitva van.
 
 Keyboard navigáció: nyilak (panel), Enter (aktivál), Escape (zár), a dialogban is Enter/Escape.
 
-### 18.2. Refresh Protocol művelet
+### 18.2. Wallet
 
-**Menüpont**: „Refresh Protocol"
+Minden módban aktív. `getWalletAddresses()` (`aqKeyring.js`) fut — seed unlock szükséges. Fix wallet-eknél seed-ből derivál, sticky-nél IndexedDB-ből olvas.
+
+### 18.3. Publish Gate (devMode)
 
 **Flow:**
-1. Wallet deriválás: `fromMnemonic(mnemonic, 1000)` (`web2Devel` index).
-2. Wallet address silent clipboard-ra másolódik (`navigator.clipboard.writeText`).
-3. Protocol config lekérése: `getProtocolCfg()` → JSON stringify → bytes.
-4. Asset feltöltés: `POST <serverUrl>/aq/asset` EIP-191 auth headerekkel → CID.
-5. Token CID beállítás: `aqSetSwarmHash` RPC, tokenId=0 → CID.
+1. Wallet: `fromRawSeed(seedGetRaw(), 1000)` — address silent clipboard-ra.
+2. Gate config: `getGateCfg()` → másolat, `rpc` mező törlése.
+3. `processPathRefs()`: path ref → upload → CID (lásd §18.7).
+4. Gate config feltöltés: `POST <serverUrl>/aq/asset` → CID.
+5. Token beállítás: `aqSetSwarmHash`, tokenId=1 → CID.
 
-**Státusz**: az overlay label réteggel kommunikál (`overlaySetLabel`, `overlayShowBusy`, `overlayShowError`).
+### 18.4. Refresh Protocol (devMode)
 
-**Siker**: overlay azonnal zár, dialog zár, mezők törlődnek.  
-**Hiba**: `overlayShowError` — OK gomb (+ Enter/Escape) zárja az overlayt; a dialog nyitva marad az újrapróbáláshoz.
+**Flow:**
+1. Wallet: `fromRawSeed(seedGetRaw(), 1000)` — address silent clipboard-ra.
+2. Protocol config: `getProtocolCfg()` → másolat.
+3. Gate entry-kből `path` törlése ha `tokenId` is van (tokenId marad).
+4. `processPathRefs()`: path ref → upload → CID (lásd §18.7).
+5. Protocol config feltöltés: `POST <serverUrl>/aq/asset` → CID.
+6. Token beállítás: `aqSetSwarmHash`, tokenId=0 → CID.
 
-**Form**:
-- Server URL — szabad szöveg (pl. `https://damjanch.mooo.com`)
-- BIP-39 mnemonic — 12 külön input mező (3×4 grid), `type="text"`; paste bármelyik mezőbe a szavakat az 1–12 mezőkbe osztja szét.
+**Státusz**: overlay label réteggel (`overlaySetLabel`, `overlayShowBusy`, `overlayShowError`).
+
+**Siker**: overlay azonnal zár, dialog zár.  
+**Hiba**: `overlayShowError` — OK gomb (+ Enter/Escape) zárja az overlayt; dialog nyitva marad.
+
+**Form**: Server URL szabad szöveg.
+
+### 18.5. Fork DAO (production)
+
+**Flow:**
+1. Wallet: `fromRawSeed(seedGetRaw(), 1000)` — address silent clipboard-ra.
+2. DAO config: `getDaoCfg()` → másolat.
+3. `processPathRefs()`: path ref → upload → CID (lásd §18.7).
+4. DAO config feltöltés: `POST <serverUrl>/aq/asset` → CID.
+5. TokenId: ha üres → `aqMintToken` → új 100+ tokenId; ha megadott → azt használja.
+6. Token beállítás: `aqSetSwarmHash`, tokenId → CID.
+
+**Form**: Server URL + TokenId input (üres = új token).
+
+### 18.6. Clear IndexedDB (devMode)
+
+Összes IndexedDB törlése (`aqSeed`, `aqSession`, `aqStorage`). Visszavonhatatlan. Utána `location.reload()`.
+
+### 18.7. processPathRefs (belső)
+
+`processPathRefs(serverUrl, wallet, config)` — a config másolatában minden `refs[cat][sub][name].path` ref → upload → `{cid, description}`. A `loader.path` is feltöltődik ha jelen van. Közös belső segítő a publish műveletek számára.
+
+---
+
+## 19. Keyring: seed unlock, session és auth flow
+
+A `aqKeyring.js` tartalmaz minden seed és session funkciót. §15 a seed store-t (IndexedDB write/exists), §17 a wallet derivációt dokumentálja — ez a szekció az unlock mechanizmust, a session kezelést és a boot auth flow-t írja le.
+
+### 19.1. Seed unlock
+
+**`seedUnlock(password?)`** — async. Ha `_unlockedSeed` már megvan, azonnal visszatér. Flow:
+1. `seedGetInternal()` — belső, csak loader kódból elérhető; kiolvas a `aqSeed` DB-ből.
+2. `decryptRecord(record, password)`:
+   - `"webauthn-prf"`: `navigator.credentials.get` PRF extension → AES-GCM decrypt.
+   - `"password"`: PBKDF2 (600 000 iter, SHA-256) → AES-GCM decrypt.
+3. Visszafejtett raw seed → `_unlockedSeed`.
+4. `sessionSave()` aszinkron háttérben (§19.2).
+
+**`seedActivate(rawBytes)`** — seedGen flow közvetlen aktiválás (seed mentés után, re-decrypt nélkül). `Uint8Array` kötelező. `sessionSave()` aszinkron háttérben.
+
+**`seedGetRaw()`** — szinkron; `isPwa || devMode` feltétel. `_unlockedSeed` referenciát adja vissza. Publish és deriválási műveletek hívják.
+
+**`isSeedUnlocked()`** — szinkron, memória-check (`_unlockedSeed !== null`). Race condition elkerülés az auth flow-ban.
+
+### 19.2. Session store (`aqSession`)
+
+Külön IndexedDB: `"aqSession"`, v1, `"session"` object store, kulcs: `"current"`. Raw seed `ArrayBuffer`-ként tárolódik — nem titkosítva. Védelmi szint: böngésző origin isolation.
+
+- **`sessionSave()`** — belső; `_unlockedSeed` → `ArrayBuffer` → IndexedDB.
+- **`sessionLoad()`** — `ArrayBuffer` visszaolvasás → `_unlockedSeed` beállítás → `true` / `false`.
+
+Logout = teljes IndexedDB törlés (§18.6 Clear IndexedDB).
+
+### 19.3. Boot auth flow
+
+`aqProtocolLoader.js` normál boot ága (seed létezik):
+
+```
+const sessionActive = isSeedUnlocked() || await sessionLoad();
+if (!sessionActive) {
+    await loadGateDao(gateName, gateEntry); // auth prompt
+}
+await loadContentDao(openTokenId);
+initHostMenu();
+```
+
+- `isSeedUnlocked()` szinkron elsőbbséget kap.
+- Session aktív → gate DAO kihagyva.
+- Sem memória, sem session → gate DAO auth prompt (`defaultPage`).
+
+`aqSeedGenComplete` callback (seed-gen utáni ág):
+
+```
+const sessionActive = isSeedUnlocked() || await sessionLoad();
+if (sessionActive) {
+    teardownGateDao();      // seed-gen UI eltávolítása
+} else {
+    await renderGatePage(); // defaultPage (auth prompt)
+}
+await loadContentDao(openTokenId);
+initHostMenu();
+```
+
+### 19.4. Gate teardown (`teardownGateDao`)
+
+`teardownGateDao()` (`aqGateRender.js`) — szinkron DOM cleanup:
+- `#aq-gate-root`, `#aq-gate-style`, `#aq-gate-script` elemek eltávolítása.
+- JS blob URL revoke.
+- `_imageBlobUrls` lista teljes revoke (aq:// képek, §19.5).
+
+Hívódik: session-aktív boot ágban; kapu DAO JS-ből `gate.done()` hívásakor (auth flow befejezésekor).
+
+### 19.5. aq:// asset referencia séma
+
+A kapu DAO HTML asset-jeiben `aq://` sémájú hivatkozások blob URL-re cserélődnek a renderelés előtt.
+
+**Formátum**: `aq://<category>/<sub>.<name>`
+
+Feldolgozás (`preprocessAqRefs`, `aqLoaderCore.js`):
+1. Regex-match: `/aq:\/\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)/g`
+2. `resolveRefIn(gateCfg, category, sub, name)` → `fetchAssetBytes` → `URL.createObjectURL`.
+3. MIME: path kiterjesztésből (`png/jpg/jpeg/svg/webp/gif`). CID ref default: `image/png`.
+4. Blob URL-ek `_imageBlobUrls` tracking; `teardownGateDao()` revoke-olja.
+
+Csak gate DAO HTML-ben aktív. Tartalmi DAO (iframe) nem kap aq:// feldolgozást.
+
+### 19.6. TokenId foglalás
+
+| Range | Funkció |
+|-------|---------|
+| `0` | Protokoll config |
+| `1–99` | Protokoll, gate DAO-k, rendszer |
+| `100+` | Sima DAO-k (`aqMintToken` innen indul) |
+
+- Gate DAO referencia tokenId: `"1"`.
+- DevMode-ban: gate entry `path` + `tokenId` párhuzamosan jelen lehet; namespace a `tokenId`-re épül (stabil).
+- Production-ban: csak `tokenId`.

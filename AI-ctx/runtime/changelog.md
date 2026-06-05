@@ -4,6 +4,15 @@ Kérésre olvasandó. Automatikusan nem töltődik be.
 
 ---
 
+## 2026-06-05 — DOCSYNC: Guide §5/§13/§17/§18/§19
+
+- §5.1: `img` kategória hozzáadva az engedett refs listához
+- §13.3: aqMintToken "1-től" → "100-tól" (0–99 rezervált)
+- §17: aqWalletDerive/Config/Store.js → aqKeyring.js; getWalletAddresses() hozzáadva
+- §18: teljes újraírás — aqDevMenu.js (devMode-only) → aqHostMenu.js (mindig aktív); Wallet, Publish Gate, Refresh Protocol, Clear IndexedDB, Fork DAO, processPathRefs
+- §19: új szekció — seed unlock, session, boot auth flow, gate teardown, aq:// séma, tokenId foglalás
+- accepted.txt: seed store döntések törölve (§15-ben dokumentált)
+
 ## 2026-06-03 — Workflow redesign
 
 - CLAUDE.md mode dispatch tábla (PLAN/DEVp/DEVs/REVIEW/AUDIT/DOCSYNC)

@@ -25,8 +25,7 @@ Data root: `/var/www/sftp/szoke/sftp/sftp/data/`
 1. Pi-s `index.html` + `aqBoot.js` deploy (nginx statikus) → teljes Pi-s publikálási flow
 2. Real device teszt (Pixel 7, damjanch.mooo.com)
 3. WEB2 GC: `POST /aq/retire` endpoint + periodic orphan scan
-4. DOCUMENTATION_SYNC: Guide §17 + §18 + új §19 (keyring, session, seed unlock, gate auth flow, hostMenu, gate teardown, aq:// séma, fork flow, tokenId foglalás)
-5. Bus relay: gate DAO adat (wallet cím) elérhetővé tétele content DAO iframe-eknek
+4. Bus relay: gate DAO adat (wallet cím) elérhetővé tétele content DAO iframe-eknek
 
 ## Tervezési döntések (Plan-szinkronra vár)
 
