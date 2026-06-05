@@ -134,5 +134,3 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 
 ## Ismert javítandók (AI workflow)
 
-- **Wakelock PID**: session-specifikus fájlnév (`aq_wakelock_$PID.pid`) — több párhuzamos session ne írja felül egymást
-- **PermissionRequest hook**: WT-n belüli tab-váltás ne triggerelnje — csak valódi ablakváltásnál tüzeljen

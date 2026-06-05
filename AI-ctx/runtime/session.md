@@ -36,7 +36,12 @@
 
 **Nyitott:**
 - accepted.txt #20 (seed store) ellenőrizendő Guide-ban DOCSYNC alkalmával
-- Git újrastrukturálás: gitignore-alapú a főprojektből, authentiq-protocol_git/ eltávolítható
+- Hook javítandók implementálása (wakelock PID, PermissionRequest tab-váltás) — SETUP módban
+
+**Git kész (2026-06-05):**
+- Főprojektből git init, .gitignore (node_modules, .lnk, desktop.ini, .tmp.driveupload)
+- Remote: https://github.com/guppilippi/authentiq-protocol.git
+- authentiq-protocol_git/ törölve, force push main-re
 
 **accepted.txt felülvizsgálat eredménye:**
 - Törölhető (doksiban van): #2, #5, #6, #7, #8, #10, #11, #12, #13, #14, #15, #16, #17, #19, #21, #22, #23
