@@ -1,0 +1,47 @@
+{
+	"rpc": "http://localhost:8082/rpc",
+	"refs": {
+		"html": {
+			"page": {
+				"main": { "path": "/demo/gate-test/main.html", "description": "Kapu DAO main page" }
+			},
+			"seedGen": {
+				"main": { "path": "/demo/gate-test/seedGen.html", "description": "Seed-gen UI HTML" }
+			}
+		},
+		"css": {
+			"page": {
+				"main": { "path": "/demo/gate-test/main.css", "description": "Kapu DAO main page stílusok" }
+			},
+			"seedGen": {
+				"main": { "path": "/demo/gate-test/seedGen.css", "description": "Seed-gen UI CSS" }
+			}
+		},
+		"js": {
+			"page": {
+				"main": { "path": "/demo/gate-test/main.js", "description": "Kapu DAO main page logika" }
+			},
+			"seedGen": {
+				"main": { "path": "/demo/gate-test/seedGen.js", "description": "Seed-gen UI logika" }
+			}
+		},
+		"img": {
+			"dao": {
+				"logo": { "path": "/demo/gate-test/logo.png", "description": "AuthentiQ logo" }
+			}
+		}
+	},
+	"pages": {
+		"main": {
+			"html": "page.main",
+			"css":  "page.main",
+			"js":   "page.main"
+		},
+		"seedGen": {
+			"html": "seedGen.main",
+			"css":  "seedGen.main",
+			"js":   "seedGen.main"
+		}
+	},
+	"defaultPage": "main"
+}

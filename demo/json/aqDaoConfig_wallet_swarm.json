@@ -1,0 +1,11 @@
+{
+	"_cidBase": "",
+	"defaultPage": "main",
+	"pages": {
+		"main": {
+			"css": "/demo/css/wallet.css",
+			"html": "/demo/html/wallet.html",
+			"js": "/demo/js/wallet.js"
+		}
+	}
+}

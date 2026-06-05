@@ -1,0 +1,46 @@
+<div class="wrap">
+  <div class="top">
+    <div class="row">
+      <div class="title">Kategóriák</div>
+      <div class="sp"></div>
+      <button id="btnAddRoot">+ Root alá</button>
+      <button id="btnSave">Mentés</button>
+    </div>
+
+    <div class="row">
+      <button id="btnExport">Export (fájl)</button>
+      <button id="btnImport">Import (fájlból)</button>
+      <input id="importFile" type="file" accept="application/json,.json" style="display:none" />
+      <div class="sp"></div>
+      <div id="status" class="status"></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="left">
+      <div class="panelHead">Fa</div>
+      <div id="tree" class="tree"></div>
+    </div>
+
+    <div class="right">
+      <div class="panelHead">Szerkesztés</div>
+
+      <div class="form">
+        <div class="lbl">Név (kötelező)</div>
+        <input id="name" />
+        <div class="lbl">Leírás</div>
+        <textarea id="desc" rows="10"></textarea>
+
+        <div class="row">
+          <button id="btnAddChild" disabled>+ Alá</button>
+          <button id="btnDelete" disabled>Törlés</button>
+          <div class="sp"></div>
+          <div class="hint" id="selInfo"></div>
+        </div>
+
+        <div class="lbl">Export eredmény</div>
+        <pre id="exportOut" class="pre"></pre>
+      </div>
+    </div>
+  </div>
+</div>

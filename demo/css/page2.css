@@ -1,0 +1,6 @@
+body { font-family: sans-serif; padding: 12px; }
+.aqH1 { color: #a70; font-style: italic; }
+.aqNav button, .aqBox button { margin: 4px; padding: 8px 10px; }
+.aqBox { margin-top: 10px; padding: 10px; border: 1px solid #cc9; }
+#aqOut { margin-top: 10px; padding: 10px; background: #fff7e6; }
+.aqNote { opacity: 0.8; }

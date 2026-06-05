@@ -1,0 +1,13 @@
+{
+	"defaultPage": "main",
+	"pages": {
+		"main": {
+			"html": "d0b67162e167e592a9976d3171d9326e3a24d93586f4eec291c405c698cb8e68"
+		},
+		"categories": {
+			"css": "3f4366e99ba21f006511c62e0e3e6b34e719a3a1878e9ca24e86fa9cc3b3c093",
+			"html": "b825616bce960625d8f17343e5eae5dab314daabf9856be0896d811c151204e5",
+			"js": "0020a1a3e47f2b953c55955fadb09bf3cfb743ca3fd80bbb4790951d2ccc52c3"
+		}
+	}
+}

@@ -1,0 +1,15 @@
+<h1 class="aqH1">PAGE 1</h1>
+
+<nav class="aqNav">
+  <button onclick="aqDemo.goto('main')">Main</button>
+  <button onclick="aqDemo.goto('page1')">Page 1</button>
+  <button onclick="aqDemo.goto('page2')">Page 2</button>
+</nav>
+
+<section class="aqBox">
+  <button onclick="aqDemo.ping()">ping() → console</button>
+  <button onclick="aqDemo.makeHelperAndUse()">helper() + protocolInfo</button>
+  <button onclick="aqDemo.namespaceCall()">aqTools.status()</button>
+</section>
+
+<p class="aqNote">Page1 demo UI.</p>

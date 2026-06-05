@@ -1,0 +1,158 @@
+/* AuthentiQ seedGen — mobile-first */
+
+#aq-gate-root {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	min-height: 100%;
+	background: #fff;
+}
+
+.aq-sg-wrap {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	background: #fff;
+}
+
+.aq-sg-header {
+	background: #fff;
+	padding: 20px 24px;
+	border-bottom: 1px solid #e8e8e8;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.aq-sg-logo-img {
+	height: 32px;
+	width: auto;
+	display: block;
+}
+
+.aq-sg-body {
+	flex: 1;
+	background: #f0f0f0;
+	padding: 28px 20px;
+	display: flex;
+	flex-direction: column;
+}
+
+.aq-seedgen-title {
+	margin: 0 0 6px;
+	font: 600 20px/1.2 system-ui, sans-serif;
+	color: #1a1a1a;
+}
+
+.aq-seedgen-intro {
+	margin: 0 0 22px;
+	font: 400 15px/1.5 system-ui, sans-serif;
+	color: #555;
+}
+
+.aq-seedgen-choice {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.aq-seedgen-form {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.aq-seedgen-label {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font: 400 14px system-ui, sans-serif;
+	color: #555;
+}
+
+.aq-seedgen-label input {
+	width: 100%;
+	padding: 15px 14px;
+	background: #fff;
+	border: 1px solid #d0d0d0;
+	border-radius: 8px;
+	color: #1a1a1a;
+	font: 400 16px system-ui, sans-serif;
+	outline: none;
+	box-sizing: border-box;
+	-webkit-appearance: none;
+	appearance: none;
+}
+.aq-seedgen-label input:focus {
+	border-color: #FF8A00;
+	box-shadow: 0 0 0 3px rgba(255,138,0,.15);
+}
+
+.aq-seedgen-actions {
+	display: flex;
+	gap: 10px;
+	margin-top: 4px;
+}
+.aq-seedgen-actions .aq-seedgen-btn { flex: 1; }
+
+.aq-seedgen-btn {
+	width: 100%;
+	padding: 15px 16px;
+	border: 1px solid #d0d0d0;
+	border-radius: 8px;
+	background: #fff;
+	color: #333;
+	font: 500 15px/1 system-ui, sans-serif;
+	cursor: pointer;
+	box-sizing: border-box;
+	-webkit-tap-highlight-color: transparent;
+}
+.aq-seedgen-btn:active   { background: #f0f0f0; }
+.aq-seedgen-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.aq-seedgen-btn-primary {
+	background: #FF8A00;
+	border-color: #FF8A00;
+	color: #fff;
+}
+.aq-seedgen-btn-primary:active    { background: #e07a00; border-color: #e07a00; }
+.aq-seedgen-btn-primary:disabled  { background: #ccc; border-color: #ccc; }
+
+.aq-seedgen-status {
+	margin-top: 18px;
+	font: 400 14px system-ui, sans-serif;
+	color: #FF8A00;
+	text-align: center;
+}
+
+.aq-seedgen-error {
+	margin-top: 18px;
+	font: 400 14px system-ui, sans-serif;
+	color: #c83030;
+	background: #fff5f5;
+	padding: 12px 16px;
+	border-radius: 8px;
+	border: 1px solid #f5c5c5;
+}
+
+.aq-seedgen-hidden { display: none !important; }
+
+/* Desktop */
+@media (min-width: 540px) {
+	#aq-gate-root {
+		background: #ebebeb;
+		align-items: center;
+		justify-content: center;
+		padding: 40px 16px;
+	}
+	.aq-sg-wrap {
+		flex: 0 0 auto;
+		width: 100%;
+		max-width: 400px;
+		min-height: auto;
+		border-radius: 14px;
+		overflow: hidden;
+		box-shadow: 0 6px 32px rgba(0,0,0,.12);
+	}
+}

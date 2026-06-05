@@ -1,0 +1,21 @@
+{
+	"_cidBase": "",
+	"defaultPage": "main",
+	"pages": {
+		"main": {
+			"css": "c5bf3add0a698e991cbe2740efcd5245651d5bf180c48e2a79b1b90911d3ddd8",
+			"html": "a4a0a73a241b72842610197c7fa7d7b4d2e3a49892ba91bd341f1d6ae91f941c",
+			"js": "81d36ec2eb324e2eae047c8b64fdf2b27cffd0a719a8dc34674094b0ef94195a"
+		},
+		"page1": {
+			"css": "6498cf5680e473a3550ed928bf40bda707c5d74aa76d433cfad708e0aba0dd35",
+			"html": "5ed4fe14cbeacd73a7c593926a08b71892e78c03e6ea64368da69b6d668d7991",
+			"js": "0b045638eb95e64d69bf4c82666528b56c1c32ed245da38ffaabd89c283a66c1"
+		},
+		"page2": {
+			"css": "1e9970daa87af8906c5e5ee0e0629b8220ea539a138a9115628f5f36d4002124",
+			"html": "07743af68f43efb11755788fea541193396dd2789e4ec43ed678ab8a57d4d2bc",
+			"js": "10e826af2d91e9fb66d44d9f3f15635f3cdcdba026246d8ce0aca931c53b9502"
+		}
+	}
+}

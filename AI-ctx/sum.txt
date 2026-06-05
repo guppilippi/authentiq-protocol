@@ -1,0 +1,14 @@
+A chat tartalmát szabályozza (MIT). HOGYAN-t a process.md.
+Prioritás: process.md > sum.txt > accepted.txt > projekt doksi és kód.
+
+# Dokumentumok
+- Manifest: kanonikus, normatív, időtlen.
+- Concepts: nem normatív, mentális modell.
+- Implementation Guide: ami létezik a kódban most.
+- Plan: ami nincs még kész vagy nincs eldöntve.
+- Egyéb csatolt: referencia, nem normatív.
+
+# AI-ctx struktúra
+- accepted.txt: `modes/audit/accepted.txt` — csak amit sehol máshol nem lehet rögzíteni
+- doc_sync_pending.md: `modes/docsync/doc_sync_pending.md`
+- Runtime állapot: `runtime/state.md`

@@ -1,0 +1,43 @@
+{
+	"defaultPage": "main",
+	"refs": {
+		"html": {
+			"page": {
+				"main":  { "path": "/demo/html/main.html",  "description": "main page HTML" },
+				"page1": { "path": "/demo/html/page1.html", "description": "page1 HTML" },
+				"page2": { "path": "/demo/html/page2.html", "description": "page2 HTML" }
+			}
+		},
+		"css": {
+			"page": {
+				"main":  { "path": "/demo/css/main.css",  "description": "main page CSS" },
+				"page1": { "path": "/demo/css/page1.css", "description": "page1 CSS" },
+				"page2": { "path": "/demo/css/page2.css", "description": "page2 CSS" }
+			}
+		},
+		"js": {
+			"page": {
+				"main":  { "path": "/demo/js/main.js",  "description": "main page JS" },
+				"page1": { "path": "/demo/js/page1.js", "description": "page1 JS" },
+				"page2": { "path": "/demo/js/page2.js", "description": "page2 JS" }
+			}
+		}
+	},
+	"pages": {
+		"main": {
+			"html": "page.main",
+			"css":  "page.main",
+			"js":   "page.main"
+		},
+		"page1": {
+			"html": "page.page1",
+			"css":  "page.page1",
+			"js":   "page.page1"
+		},
+		"page2": {
+			"html": "page.page2",
+			"css":  "page.page2",
+			"js":   "page.page2"
+		}
+	}
+}

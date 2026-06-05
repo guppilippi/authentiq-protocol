@@ -1,0 +1,12 @@
+{
+	"loader": {
+		"path": "/js/aqProtocolLoader.js"
+	},
+	"gates": {
+		"aq": {
+			"tokenId": "1",
+			"path": "/demo/gate-test/config.json",
+			"description": "AuthentiQ gate DAO"
+		}
+	}
+}

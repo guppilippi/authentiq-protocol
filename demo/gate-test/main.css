@@ -1,0 +1,122 @@
+/* AuthentiQ gate — mobile-first */
+
+#aq-gate-root {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	min-height: 100%;
+	background: #fff;
+}
+
+#aq-gate-wrap {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	background: #fff;
+}
+
+/* Header */
+#aq-gate-header {
+	background: #fff;
+	padding: 20px 24px;
+	border-bottom: 1px solid #e8e8e8;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+#aq-logo-img {
+	height: 32px;
+	width: auto;
+	display: block;
+}
+
+/* Body */
+#aq-gate-body {
+	flex: 1;
+	background: #f0f0f0;
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	padding: 28px 20px;
+}
+
+/* Unlock */
+#aq-unlock {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+#aq-welcome {
+	font: 400 15px/1.5 system-ui, sans-serif;
+	color: #555;
+	text-align: center;
+	margin: 0 0 4px;
+}
+
+.aq-btn-filled {
+	width: 100%;
+	padding: 15px 16px;
+	background: #FF8A00;
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	font: 600 15px/1 system-ui, sans-serif;
+	letter-spacing: 0.02em;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+.aq-btn-filled:active   { background: #e07a00; }
+.aq-btn-filled:disabled { background: #ccc; color: #999; cursor: default; }
+
+.aq-sep {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	color: #aaa;
+	font: 400 13px system-ui, sans-serif;
+}
+.aq-sep::before, .aq-sep::after { content: ""; flex: 1; height: 1px; background: #d8d8d8; }
+
+#aq-unlock input[type=password] {
+	width: 100%;
+	padding: 15px 14px;
+	background: #fff;
+	border: 1px solid #d0d0d0;
+	border-radius: 8px;
+	color: #1a1a1a;
+	font: 400 16px system-ui, sans-serif;
+	outline: none;
+	box-sizing: border-box;
+	-webkit-appearance: none;
+}
+#aq-unlock input[type=password]:focus {
+	border-color: #FF8A00;
+	box-shadow: 0 0 0 3px rgba(255,138,0,.15);
+}
+#aq-unlock input[type=password]::placeholder { color: #bbb; }
+
+#aq-status { font: 400 13px system-ui; color: #888; text-align: center; min-height: 18px; }
+#aq-error  { font: 400 13px system-ui; color: #c83030; text-align: center; min-height: 18px; }
+
+/* Desktop */
+@media (min-width: 540px) {
+	#aq-gate-root {
+		background: #ebebeb;
+		align-items: center;
+		justify-content: center;
+		padding: 40px 16px;
+	}
+	#aq-gate-wrap {
+		flex: 0 0 auto;
+		width: 100%;
+		max-width: 400px;
+		min-height: auto;
+		border-radius: 14px;
+		overflow: hidden;
+		box-shadow: 0 6px 32px rgba(0,0,0,.12);
+	}
+}

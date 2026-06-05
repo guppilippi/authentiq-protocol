@@ -1,0 +1,31 @@
+{
+	"defaultPage": "main",
+	"refs": {
+		"html": {
+			"page": {
+				"main":       { "path": "/demo/html/main2.html",      "description": "main2 page HTML" },
+				"categories": { "path": "/demo/html/categories.html", "description": "categories page HTML" }
+			}
+		},
+		"css": {
+			"page": {
+				"categories": { "path": "/demo/css/categories.css", "description": "categories page CSS" }
+			}
+		},
+		"js": {
+			"page": {
+				"categories": { "path": "/demo/js/categories.js", "description": "categories page JS" }
+			}
+		}
+	},
+	"pages": {
+		"main": {
+			"html": "page.main"
+		},
+		"categories": {
+			"html": "page.categories",
+			"css":  "page.categories",
+			"js":   "page.categories"
+		}
+	}
+}

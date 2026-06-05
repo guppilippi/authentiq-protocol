@@ -1,0 +1,56 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$p = Start-Process powershell -WindowStyle Hidden -ArgumentList '-NonInteractive','-EncodedCommand','QQBkAGQALQBUAHkAcABlACAALQBOAGEAbQBlACAASwAgAC0ATgBhAG0AZQBzAHAAYQBjAGUAIABXACAALQBNAGUAbQBiAGUAcgBEAGUAZgBpAG4AaQB0AGkAbwBuACAAJwBbAEQAbABsAEkAbQBwAG8AcgB0ACgAIgBrAGUAcgBuAGUAbAAzADIALgBkAGwAbAAiACkAXQAgAHAAdQBiAGwAaQBjACAAcwB0AGEAdABpAGMAIABlAHgAdABlAHIAbgAgAHUAaQBuAHQAIABTAGUAdABUAGgAcgBlAGEAZABFAHgAZQBjAHUAdABpAG8AbgBTAHQAYQB0AGUAKAB1AGkAbgB0ACAAZgApADsAJwA7ACAAQQBkAGQALQBUAHkAcABlACAALQBBAHMAcwBlAG0AYgBsAHkAIABTAHkAcwB0AGUAbQAuAFcAaQBuAGQAbwB3AHMALgBGAG8AcgBtAHMAOwAgAHcAaABpAGwAZQAoACQAdAByAHUAZQApAHsAaQBmACgAWwBTAHkAcwB0AGUAbQAuAFcAaQBuAGQAbwB3AHMALgBGAG8AcgBtAHMALgBTAHkAcwB0AGUAbQBJAG4AZgBvAHIAbQBhAHQAaQBvAG4AXQA6ADoAUABvAHcAZQByAFMAdABhAHQAdQBzAC4AUABvAHcAZQByAEwAaQBuAGUAUwB0AGEAdAB1AHMAIAAtAG4AZQAgACIATwBuAGwAaQBuAGUAIgApAHsAWwBXAC4ASwBdADoAOgBTAGUAdABUAGgAcgBlAGEAZABFAHgAZQBjAHUAdABpAG8AbgBTAHQAYQB0AGUAKABbAHUAaQBuAHQAMwAyAF0AMAB4ADgAMAAwADAAMAAwADAAMQApAH0AOwBTAHQAYQByAHQALQBTAGwAZQBlAHAAIAAxADgAMAB9AA==' -PassThru; $p.Id | Out-File \"$env:TEMP\\aq_wakelock.pid\" -Encoding ascii",
+            "shell": "powershell",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; $xml = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText01); $xml.SelectSingleNode(\"//text[@id='1']\").AppendChild($xml.CreateTextNode('Claude Code: jovahagyas szukseges')) | Out-Null; $toast = [Windows.UI.Notifications.ToastNotification]::new($xml); $toast.ExpirationTime = [DateTimeOffset]::Now.AddSeconds(10); [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Claude Code').Show($toast)",
+            "shell": "powershell"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$raw=try{[Console]::In.ReadToEnd()}catch{''}; $d=try{$raw|ConvertFrom-Json}catch{$null}; $tp=if($d -and $d.transcript_path){$d.transcript_path}else{''}; $ti=0;$to=0;$tw=0;$tr=0; if($tp -and (Test-Path $tp)){Get-Content $tp -EA SilentlyContinue|ForEach-Object{try{$o=$_|ConvertFrom-Json -EA SilentlyContinue;$u=if($o.message -and $o.message.usage){$o.message.usage}elseif($o.usage){$o.usage}else{$null};if($u){if($u.input_tokens){$ti+=[int]$u.input_tokens};if($u.output_tokens){$to+=[int]$u.output_tokens};if($u.cache_creation_input_tokens){$tw+=[int]$u.cache_creation_input_tokens};if($u.cache_read_input_tokens){$tr+=[int]$u.cache_read_input_tokens}}}catch{}}}; $ossz=$ti+$to+$tw+$tr; @{systemMessage=('TOKEN | be:'+$ti+' ki:'+$to+' cW:'+$tw+' cR:'+$tr+' ossz:'+$ossz)}|ConvertTo-Json -Compress",
+            "shell": "powershell"
+          },
+          {
+            "type": "command",
+            "command": "$f = \"$env:TEMP\\aq_wakelock.pid\"; if (Test-Path $f) { $id = [int](Get-Content $f -ErrorAction SilentlyContinue); if ($id) { Stop-Process -Id $id -Force -ErrorAction SilentlyContinue }; Remove-Item $f -ErrorAction SilentlyContinue }; [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; $xml = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText01); $xml.SelectSingleNode(\"//text[@id='1']\").AppendChild($xml.CreateTextNode('Claude Code: valasz kesz')) | Out-Null; $toast = [Windows.UI.Notifications.ToastNotification]::new($xml); $toast.ExpirationTime = [DateTimeOffset]::Now.AddSeconds(10); [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Claude Code').Show($toast)",
+            "shell": "powershell"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; $xml = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText01); $xml.SelectSingleNode(\"//text[@id='1']\").AppendChild($xml.CreateTextNode('Claude Code: compact blokkova — indits uj chatet')) | Out-Null; $toast = [Windows.UI.Notifications.ToastNotification]::new($xml); $toast.ExpirationTime = [DateTimeOffset]::Now.AddSeconds(10); [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Claude Code').Show($toast); Write-Output '{\"continue\": false}'",
+            "shell": "powershell"
+          }
+        ]
+      }
+    ]
+  },
+  "tui": "fullscreen"
+}

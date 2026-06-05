@@ -1,0 +1,38 @@
+# AQ – accepted.txt (élő döntési állapot)
+
+Csak ami sehol máshol nem rögzíthető (nem Manifest, Guide, Plan, Glossary).
+Amit DOCSYNC során doksiba viszünk: törlendő innen. A doksi az elsődleges forrás.
+
+---
+
+## Runtime és UX határok (részlet)
+
+- Az overlay tisztán implementációs UX elem. **Soha nem válik normatívvá vagy protokoll-elemmé.**
+  (Többi pont Guide/Manifest-ben dokumentált.)
+
+## Felelősségi határok
+
+- A page felelős a saját bootjáért (`AQ_PAGE_READY`).
+- A host nem próbálja "megjavítani" a hibás page-et.
+- DEV-only kényelmi viselkedések (pl. path-alapú betöltés) nem protokoll-kompatibilisek.
+
+## Trusted státusz (audit-felvetés válasza)
+
+- A trusted státusz forrása: **explicit közösségi döntés**, nem automatikus számítás.
+- Az aqProtocol DAO config `exports`-szal megosztott refs-ei + a `gates`-ben listázott kapu DAO-k trusted-ek.
+- Forkolással öröklődik (az új aqProtocol fork a szülő exportált bejegyzéseit távoli refként viszi magával).
+
+## Audit szintezés (audit-felvetés válasza)
+
+- Funkció és asset szintű, nem DAO szintű.
+- Trusted auditor DAO beemeli az auditált bejegyzést távoli refként → audit öröklés.
+- Privát funkció/asset megszünteti az audit öröklést (formázás/megjelenés nem).
+- Szintezett csökkenő súllyal: protokoll DAO közvetlen 1.0, 1. szint 0.8, 2. szint 0.6, stb.
+- Kapu DAO: teljes egészében protokoll-auditált (nincs privát funkció).
+
+## Seed store tervezési döntések (ellenőrizendő DOCSYNC-ben — Guide §?)
+
+- Külön IndexedDB adatbázis (`aqSeed`, v1), nem az `aqStorage`-dzsal közös. Szándékos szeparáció — a seed belső, loader-korlátozott forrás.
+- A kapu DAO **nem olvashatja vissza** a seed rekordot (`seedGetInternal` csak loader belső kód számára). Csak jelenlét (`exists`) ellenőrizhető és új rekord menthető (`store`).
+- Ha seed már létezik, a `seedStore` hibát ad — nem írható felül. Szándékos: felülírás = adatvesztés kockázat.
+- A `storedAt: Date.now()` automatikusan hozzáadódik mentéskor.

@@ -1,0 +1,26 @@
+<h1 class="aqH1">MAIN</h1>
+
+<nav class="aqNav">
+  <button onclick="dao2()">Dao2</button>
+  <button onclick="aqDemo.goto('main')">Main</button>
+  <button onclick="aqDemo.goto('page1')">Page 1</button>
+  <button onclick="aqDemo.goto('page2')">Page 2</button>
+  
+  <button onclick="aqDemo.test()">test</button>
+</nav>
+
+<section class="aqBox">
+  <button onclick="aqDemo.showProtocolInfo()">protocolInfo → alert</button>
+  <button onclick="aqDemo.logProtocolInfo()">protocolInfo → console</button>
+  <button onclick="aqDemo.defineInlineGlobal()">define window.valami() + call</button>
+  <button onclick="valami()">call valami() (ha már definiálva)</button>
+</section>
+
+<p class="aqNote">Main page demo UI.</p>
+
+<script>
+	function dao2() {;
+//		aq.switchDao(2);
+		aq.switchDao("/demo/json/aqDaoConfig2.json");
+	}
+</script>

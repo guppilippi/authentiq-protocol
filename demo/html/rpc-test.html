@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>RPC Lookup Test</title>
+<style>
+body { font-family: monospace; max-width: 600px; margin: 40px auto; }
+input, button { font-family: monospace; font-size: 14px; padding: 6px; }
+input { width: 200px; }
+#result { margin-top: 20px; padding: 12px; background: #111; color: #0f0; white-space: pre-wrap; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<h3>RPC Lookup Test</h3>
+
+<label>RPC endpoint:</label><br>
+<input id="endpoint" value="http://localhost:8545"><br><br>
+
+<label>Contract:</label><br>
+<input id="contract" value="0x64521be8D93483f5A41c40c21176137aEd65296D" style="width:400px"><br><br>
+
+<label>Token ID (integer):</label><br>
+<input id="tokenId" type="number" value="1"><br><br>
+
+<button onclick="doCall()">eth_call</button>
+
+<div id="result">waiting...</div>
+
+<script>
+const SEL = "0xcc2fb628";
+
+async function doCall() {
+    const endpoint = document.getElementById("endpoint").value;
+    const contract = document.getElementById("contract").value;
+    const tokenId = parseInt(document.getElementById("tokenId").value);
+    const out = document.getElementById("result");
+
+    // Build calldata: selector + tokenId as 32-byte hex
+    const data = SEL + tokenId.toString(16).padStart(64, "0");
+
+    const payload = {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "eth_call",
+        params: [{ to: contract, data: data }, "latest"]
+    };
+
+    out.textContent = "→ " + JSON.stringify(payload, null, 2);
+
+    try {
+        const resp = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const json = await resp.json();
+        out.textContent += "\n\n← " + JSON.stringify(json, null, 2);
+    } catch (e) {
+        out.textContent += "\n\nERROR: " + e.message;
+    }
+}
+</script>
+</body>
+</html>

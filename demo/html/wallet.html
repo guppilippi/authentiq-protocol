@@ -1,0 +1,111 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+
+<div id="app">
+  <div class="logo">AQ Protocol</div>
+
+  <!-- SCREEN 1: Create wallet -->
+  <div class="screen active" id="screen-create">
+    <h1>Új tárca</h1>
+    <p class="subtitle">Első indítás – tárca generálás</p>
+
+    <label>Jelszó (titkosításhoz)</label>
+    <input type="password" id="create-pw" placeholder="Min. 8 karakter…">
+
+    <label>Jelszó megerősítése</label>
+    <input type="password" id="create-pw2" placeholder="Ugyanaz még egyszer…">
+
+    <button class="btn btn-primary" onclick="aqWallet.createWallet()">Tárca generálása</button>
+
+    <div id="create-msg"></div>
+  </div>
+
+  <!-- SCREEN 2: Seed phrase megjelenítés -->
+  <div class="screen" id="screen-seed">
+    <h1>Seed phrase</h1>
+    <p class="subtitle">Mentsd el offline – ez az egyetlen mentés</p>
+
+    <div class="warn-box">
+      ⚠ Ez az egyetlen alkalom, hogy látod a seed phrase-t.<br>
+      Írd le papírra. Ha elvész, a tárca visszaállíthatatlan.
+    </div>
+
+    <div class="seed-grid" id="seed-display"></div>
+
+    <button class="btn btn-primary" onclick="aqWallet.confirmSeed()">Elmentettem, folytatás</button>
+  </div>
+
+  <!-- SCREEN 3: Biometria regisztráció -->
+  <div class="screen" id="screen-bio">
+    <h1>Biometria</h1>
+    <p class="subtitle">Opcionális – gyorsabb feloldás</p>
+
+    <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:20px;">
+      Ha az eszközöd támogatja (ujjlenyomat, arcfelismerés), regisztrálhatsz biometrikus feloldást.
+      Egyébként jelszóval is feloldható lesz a tárca.
+    </p>
+
+    <button class="btn btn-bio" onclick="aqWallet.registerBiometric()">🔐 Biometria regisztrálása</button>
+    <button class="btn btn-secondary" onclick="aqWallet.skipBiometric()">Kihagyás – csak jelszó</button>
+
+    <div id="bio-reg-msg"></div>
+  </div>
+
+  <!-- SCREEN 4: Unlock -->
+  <div class="screen" id="screen-unlock">
+    <h1>Feloldás</h1>
+    <p class="subtitle">Tárca zárolva</p>
+
+    <div id="bio-unlock-section">
+      <button class="btn btn-bio" onclick="aqWallet.unlockBiometric()">🔐 Biometriával</button>
+      <div class="divider">vagy</div>
+    </div>
+
+    <label>Jelszó</label>
+    <input type="password" id="unlock-pw" placeholder="Jelszó…" onkeydown="if(event.key==='Enter')aqWallet.unlockPassword()">
+    <button class="btn btn-primary" onclick="aqWallet.unlockPassword()">Feloldás jelszóval</button>
+
+    <div id="unlock-msg"></div>
+  </div>
+
+  <!-- SCREEN 5: Wallet dashboard -->
+  <div class="screen" id="screen-wallet">
+    <h1>Tárca</h1>
+    <p class="subtitle">Gnosis Chain · xDAI</p>
+
+    <div class="info-row">
+      <span class="info-label">Cím</span>
+      <span style="display:flex;align-items:center;gap:8px;">
+        <span class="info-value accent" id="w-address" style="font-size:11px;"></span>
+        <button class="copy-btn" onclick="aqWallet.copyAddress()">copy</button>
+      </span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Egyenleg</span>
+      <span class="info-value accent" id="w-balance">…</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Hálózat</span>
+      <span class="info-value">Gnosis Chain <span class="badge badge-ok">100</span></span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Auth</span>
+      <span class="info-value" id="w-auth-type">—</span>
+    </div>
+
+    <button class="btn btn-secondary" style="margin-top:20px" onclick="aqWallet.lockWallet()">🔒 Zárolás</button>
+    <button class="btn btn-danger" onclick="aqWallet.confirmWipe()">Tárca törlése</button>
+
+    <div id="wallet-msg"></div>
+    <div class="sim-tag">simulation mode · localStorage</div>
+  </div>
+
+<!-- SCREEN: Confirm dialog -->
+<div class="screen" id="screen-confirm">
+  <h1 id="confirm-title">Megerősítés</h1>
+  <p class="subtitle" id="confirm-msg"></p>
+  <div class="warn-box" id="confirm-warn"></div>
+  <button class="btn btn-danger" onclick="aqWallet.confirmYes()">Igen, törlöm</button>
+  <button class="btn btn-secondary" onclick="aqWallet.confirmNo()">Mégsem</button>
+</div>
+
+</div>

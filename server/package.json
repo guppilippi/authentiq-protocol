@@ -1,0 +1,14 @@
+{
+	"name": "aq-protocol-server",
+	"version": "0.1.0",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"cid": "node cidServer.js",
+		"rpc": "node rpcServer.js",
+		"aq":  "node aqServer.js"
+	},
+	"dependencies": {
+		"ethers": "^6.0.0"
+	}
+}

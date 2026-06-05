@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Write(C:\\Projects\\AuthentiQ\\AI-ctx\\runtime\\*)",
+      "Edit(C:\\Projects\\AuthentiQ\\AI-ctx\\runtime\\*)"
+    ]
+  }
+}

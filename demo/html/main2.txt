@@ -1,0 +1,209 @@
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AQ Storage Test v2</title>
+  <style>
+    body { font-family: system-ui, Segoe UI, Arial; margin: 16px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+    label { display: block; font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
+    input, textarea, button, select { font: inherit; }
+    input, textarea, select { padding: 8px; }
+    input, select { width: 320px; }
+    textarea { width: 100%; height: 110px; }
+    button { padding: 8px 12px; cursor: pointer; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin: 12px 0; }
+    pre { white-space: pre-wrap; background: #f6f6f6; padding: 12px; border-radius: 10px; margin: 0; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .small { font-size: 12px; opacity: 0.75; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } input, select { width: 100%; } }
+    .ok { color: #116611; }
+    .warn { color: #8a5a00; }
+    .err { color: #8a0000; }
+  </style>
+</head>
+<body>
+  <h2>AQ Storage teszt ( unified text+meta )</h2>
+  <button onclick="dao1()">dao1</button>
+  <button onclick="aq.navigate('categories')">categories</button>
+  <div class="small">
+    PageKey: <span id="pageKey" class="mono"></span>
+    &nbsp;|&nbsp; DevMode: <span id="devMode" class="mono"></span>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>Név / prefix</label>
+        <input id="name" class="mono" placeholder="pl. a/b/c vagy üres: (root)" />
+      </div>
+
+      <div>
+        <label>List opciók</label>
+        <select id="listMode">
+          <option value="default">default (meta=true, text=false)</option>
+          <option value="names">meta=false (csak nevek)</option>
+          <option value="withText">text=true (prefix text + items meta)</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Rename from</label>
+        <input id="from" class="mono" placeholder="pl. a/b" />
+      </div>
+      <div>
+        <label>Rename to</label>
+        <input id="to" class="mono" placeholder="pl. x/y" />
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:12px">
+      <div>
+        <label>Text (patch.text)</label>
+        <textarea id="text" class="mono" placeholder="text value (v)"></textarea>
+      </div>
+      <div>
+        <label>Meta (patch.meta)</label>
+        <textarea id="meta" class="mono" placeholder='meta string (m) — tipikusan JSON string'></textarea>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:12px">
+      <button id="btnPutText">Put: csak text</button>
+      <button id="btnPutMeta">Put: csak meta</button>
+      <button id="btnPutBoth">Put: text+meta</button>
+      <button id="btnGet">Get node</button>
+      <button id="btnList">List</button>
+      <button id="btnDelete">Delete</button>
+      <button id="btnRename">Rename</button>
+      <button id="btnSeed">Seed (B-modell példa)</button>
+      <button id="btnClear">Clear output</button>
+    </div>
+
+    <div class="small warn" style="margin-top:8px">
+      Root: text nem írható, csak meta. Delete("") = teljes DAO wipe.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content: space-between;">
+      <div class="small">Kimenet</div>
+      <div class="small mono" id="ts"></div>
+    </div>
+    <pre id="out" class="mono"></pre>
+  </div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const out = $("out");
+
+  function stamp() { $("ts").textContent = new Date().toISOString(); }
+  function show(v) { stamp(); out.textContent = (typeof v === "string") ? v : JSON.stringify(v, null, 2); }
+  function showErr(e) { stamp(); out.textContent = "ERROR: " + (e && e.message ? e.message : String(e)); }
+
+  function needAQ() {
+    if (!window.aq) throw new Error("window.aq hiányzik (nem AQ loaderben fut?)");
+  }
+
+  $("pageKey").textContent = String(window.aqPageKey || "");
+  $("devMode").textContent = String(!!window.aqDevMode);
+
+  async function putPatch(patch) {
+    needAQ();
+    const name = $("name").value;
+    const r = await aq.storagePut(name, patch);
+    return { ok: true, result: r };
+  }
+
+  $("btnPutText").onclick = async () => {
+    try {
+      const text = $("text").value;
+      show(await putPatch({ text }));
+    } catch (e) { showErr(e); }
+  };
+
+  $("btnPutMeta").onclick = async () => {
+    try {
+      const meta = $("meta").value;
+      show(await putPatch({ meta }));
+    } catch (e) { showErr(e); }
+  };
+
+  $("btnPutBoth").onclick = async () => {
+    try {
+      const text = $("text").value;
+      const meta = $("meta").value;
+      show(await putPatch({ text, meta }));
+    } catch (e) { showErr(e); }
+  };
+
+  $("btnGet").onclick = async () => {
+    try {
+      needAQ();
+      const name = $("name").value;
+      const r = await aq.storageGet(name);
+      show({ ok: true, result: r });
+    } catch (e) { showErr(e); }
+  };
+
+  $("btnList").onclick = async () => {
+    try {
+      needAQ();
+      const prefix = $("name").value;
+      const mode = $("listMode").value;
+      let options;
+      if (mode === "names") options = { meta: false };
+      else if (mode === "withText") options = { text: true };
+      // default: options undefined
+      const r = await aq.storageList(prefix, options);
+      show({ ok: true, result: r });
+    } catch (e) { showErr(e); }
+  };
+
+  $("btnDelete").onclick = async () => {
+    try {
+      needAQ();
+      const name = $("name").value;
+      const r = await aq.storageDelete(name);
+      show({ ok: true, result: r });
+    } catch (e) { showErr(e); }
+  };
+
+  $("btnRename").onclick = async () => {
+    try {
+      needAQ();
+      const from = $("from").value;
+      const to = $("to").value;
+      const r = await aq.storageRename(from, to);
+      show({ ok: true, result: r });
+    } catch (e) { showErr(e); }
+  };
+
+  $("btnSeed").onclick = async () => {
+    try {
+      needAQ();
+      // B-modell: prefixek előbb
+      await aq.storagePut("a", { text: "" });
+      await aq.storagePut("a/b", { text: "" });
+      await aq.storagePut("a/b/c", { text: "hello", meta: "{\"kind\":\"leaf\"}" });
+      await aq.storagePut("a/d", { text: "world", meta: "{\"kind\":\"leaf\"}" });
+      await aq.storagePut("", { meta: "{\"root\":true}" });
+      show({ ok: true, seeded: true, tip: "Próbáld: list('a'), list('a', {text:true}), get('a/b/c'), delete('a')." });
+    } catch (e) { showErr(e); }
+  };
+
+  $("btnClear").onclick = () => { out.textContent = ""; stamp(); };
+
+  show("Készen áll. Tipp: Seed → list('a') / get('a/b/c') / rename('a/b','x/y') / delete('') wipe.");
+  
+})();
+	function dao1() {
+		aq.switchDao(1);
+//		aq.switchDao("/demo/json/aqDaoConfig.json");
+	}
+
+</script>
+</body>
+</html>
