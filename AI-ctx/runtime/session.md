@@ -57,6 +57,30 @@
 - Átkerül runtime/state.md-be: #1 (projekt-állapot)
 - #20 (seed store) még ellenőrizendő Guide-ban
 
+## 2026-06-06 — AUDIT: teljes kódbázis + docs audit (Opus 4.8)
+
+**16 finding, eredmény:**
+- F01 🔴 javítva: duplikált `getGateCfg` export (aqLoaderCore.js:41) — build törés volt
+- F02 🔴 docs: Guide §8.2 — page-oldali `ev.origin` check dokumentálva
+- F03 🟡 elfogadva: symlink szerver Linux-only (Pi)
+- F04 🟡 docs: Guide §15 — `aqSeed.js` → `aqKeyring.js`
+- F05 🟡 elfogadva: Windows nem publish platform
+- F06 🟡 javítva: `CID_RE` → `/^[0-9a-f]{64}$/i` (aqServer.js, rpcServer.js)
+- F07 🟡 docs: Plan §2.2 + Glossary — `img` kategória hozzáadva
+- F08 🟡 docs: Guide §14.2–14.4 — seed.unlock/activate, wallet.addresses, gate.done
+- F09 🟡 docs: Guide §17 — oneshot counter logika pontosítva
+- F10 🟡 docs: Guide §7.1 — single-flight lock / kritikus átmenet szétválasztva
+- F11 🟢 elfogadva: `_src` emlékeztető marad
+- F12 🟢 docs: Guide §8.2 — `allow-downloads` dokumentálva
+- F13 🟢 elfogadva: seed nem exportálható, BIP-39 inkompatibilitás irreleváns
+- F14 🟢 elfogadva: `setStatus` fire-and-forget
+- F15 🟢 javítva: `DAO_CONTRACT` → util.js, aqServer.js + rpcServer.js importálja
+- F16 🟢 docs: accepted.txt — remote ref integritás rögzítve
+
+**Mellékesen feltárt téma:** PWA bootstrap centralizáltság — manifest.json hiányzik, Pi deploy előfeltétele; web3-ból nem szolgálható ki tisztán. Feljegyezve state.md függő témákba, következő sessionben PLAN módban.
+
+**Commit:** 96316de — push: main
+
 ## 2026-06-06 — PLAN: Claude Code újdonságok, ultrathink, auto-frissítés
 
 **Megállapítások:**
