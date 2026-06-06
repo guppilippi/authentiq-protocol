@@ -8676,10 +8676,12 @@ send("AQ_PAGE_READY", { });
   var _readyResolve = null;
   var aqSessionToken;
   var _bootHashConsumed = false;
+  var getGateCfg = () => gateCfg;
   var getProtocolCfg = () => protocolCfg;
   var setProtocolCfg = (v) => {
     protocolCfg = v;
   };
+  var getDaoCfg = () => cfg;
   var getCurrentKey = () => currentKey;
   var getPendingInitKey = () => pendingInitKey;
   var getAqSessionToken = () => aqSessionToken;
@@ -9049,19 +9051,112 @@ send("AQ_PAGE_READY", { });
     if (j.error) throw new Error(`rpc: ${j.error.message || JSON.stringify(j.error)}`);
     return j.result;
   }
-  async function runRefreshProtocol(serverUrl) {
-    overlaySetLabel("Deriving wallet\u2026");
+  async function mintNewToken(serverUrl, wallet) {
+    const ts = Date.now().toString();
+    const sig = await wallet.sign(`aqMintToken:${ts}`);
+    const resp = await fetch(`${serverUrl}/rpc`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "aqMintToken",
+        params: [{ timestamp: ts, wallet: wallet.address.toLowerCase(), sig }]
+      })
+    });
+    if (!resp.ok) throw new Error(`rpc http ${resp.status}`);
+    const j = await resp.json();
+    if (j.error) throw new Error(`aqMintToken: ${j.error.message || JSON.stringify(j.error)}`);
+    return j.result.tokenId;
+  }
+  async function processPathRefs(serverUrl, wallet, config) {
+    const result = JSON.parse(JSON.stringify(config));
+    if (result.refs) {
+      for (const cat of Object.keys(result.refs)) {
+        for (const sub of Object.keys(result.refs[cat])) {
+          for (const name of Object.keys(result.refs[cat][sub])) {
+            const ref = result.refs[cat][sub][name];
+            if (typeof ref.path === "string") {
+              overlaySetLabel(`Uploading ${cat}/${sub}.${name}\u2026`);
+              const resp = await fetch(ref.path, { cache: "no-store" });
+              if (!resp.ok) throw new Error(`fetch ${ref.path}: ${resp.status}`);
+              const cid = await uploadAsset(serverUrl, wallet, new Uint8Array(await resp.arrayBuffer()));
+              result.refs[cat][sub][name] = { cid, description: ref.description };
+            }
+          }
+        }
+      }
+    }
+    if (result.loader?.path) {
+      overlaySetLabel("Uploading loader\u2026");
+      const resp = await fetch(result.loader.path, { cache: "no-store" });
+      if (!resp.ok) throw new Error(`fetch loader: ${resp.status}`);
+      const cid = await uploadAsset(serverUrl, wallet, new Uint8Array(await resp.arrayBuffer()));
+      result.loader = { cid };
+    }
+    return result;
+  }
+  async function runPublishGate(serverUrl) {
     const wallet = fromRawSeed(seedGetRaw(), 1e3);
     navigator.clipboard.writeText(wallet.address).catch(() => {
     });
-    const cfg2 = getProtocolCfg();
-    if (!cfg2) throw new Error("No protocol config loaded");
-    const bytes2 = new TextEncoder().encode(JSON.stringify(cfg2));
-    overlaySetLabel(`Uploading\u2026 (${bytes2.length} bytes)`);
-    const cid = await uploadAsset(serverUrl, wallet, bytes2);
-    overlaySetLabel("CID: " + cid.slice(0, 16) + "\u2026");
+    const rawCfg = getGateCfg();
+    if (!rawCfg) throw new Error("Gate config not loaded");
+    const forPublish = JSON.parse(JSON.stringify(rawCfg));
+    delete forPublish.rpc;
+    const processed = await processPathRefs(serverUrl, wallet, forPublish);
+    overlaySetLabel("Uploading gate config\u2026");
+    const cfgCid = await uploadAsset(
+      serverUrl,
+      wallet,
+      new TextEncoder().encode(JSON.stringify(processed, null, "	"))
+    );
+    overlaySetLabel("Setting gate tokenId=1 \u2192 CID\u2026");
+    await setSwarmHash(serverUrl, wallet, "1", cfgCid);
+  }
+  async function runRefreshProtocol(serverUrl) {
+    const wallet = fromRawSeed(seedGetRaw(), 1e3);
+    navigator.clipboard.writeText(wallet.address).catch(() => {
+    });
+    const rawCfg = getProtocolCfg();
+    if (!rawCfg) throw new Error("Protocol config not loaded");
+    const forPublish = JSON.parse(JSON.stringify(rawCfg));
+    if (forPublish.gates) {
+      for (const entry of Object.values(forPublish.gates)) {
+        if (entry.tokenId && entry.path) delete entry.path;
+      }
+    }
+    const processed = await processPathRefs(serverUrl, wallet, forPublish);
+    overlaySetLabel("Uploading protocol config\u2026");
+    const cid = await uploadAsset(
+      serverUrl,
+      wallet,
+      new TextEncoder().encode(JSON.stringify(processed, null, "	"))
+    );
     overlaySetLabel("Setting tokenId=0 \u2192 CID\u2026");
     await setSwarmHash(serverUrl, wallet, "0", cid);
+  }
+  async function runForkCurrentDao(serverUrl, tokenId) {
+    const wallet = fromRawSeed(seedGetRaw(), 1e3);
+    navigator.clipboard.writeText(wallet.address).catch(() => {
+    });
+    const rawCfg = getDaoCfg();
+    if (!rawCfg) throw new Error("DAO config not loaded");
+    const processed = await processPathRefs(serverUrl, wallet, JSON.parse(JSON.stringify(rawCfg)));
+    overlaySetLabel("Uploading DAO config\u2026");
+    const cfgCid = await uploadAsset(
+      serverUrl,
+      wallet,
+      new TextEncoder().encode(JSON.stringify(processed, null, "	"))
+    );
+    let targetId = tokenId?.trim();
+    if (!targetId) {
+      overlaySetLabel("Minting new token\u2026");
+      targetId = await mintNewToken(serverUrl, wallet);
+    }
+    overlaySetLabel(`Setting tokenId=${targetId} \u2192 CID\u2026`);
+    await setSwarmHash(serverUrl, wallet, targetId, cfgCid);
+    return targetId;
   }
   function initHostMenu() {
     const style = document.createElement("style");
@@ -9099,7 +9194,11 @@ send("AQ_PAGE_READY", { });
     let panelHtml = "<h3>AQ</h3>";
     panelHtml += '<div class="aq-hm-item" id="aq-hm-wallet-item" tabindex="0">Wallet</div>';
     if (devMode) {
+      panelHtml += '<div class="aq-hm-item" id="aq-hm-gate-item"  tabindex="0">Publish Gate</div>';
       panelHtml += '<div class="aq-hm-item" id="aq-hm-proto-item" tabindex="0">Refresh Protocol</div>';
+      panelHtml += '<div class="aq-hm-item" id="aq-hm-clear-item" tabindex="0" style="color:#c44">Clear IndexedDB</div>';
+    } else {
+      panelHtml += '<div class="aq-hm-item" id="aq-hm-fork-item"  tabindex="0">Fork DAO</div>';
     }
     panel.innerHTML = panelHtml;
     document.body.appendChild(panel);
@@ -9130,6 +9229,36 @@ send("AQ_PAGE_READY", { });
       backdrop.style.display = "block";
       panel.hidden = true;
       dialog.hidden = false;
+    }
+    function urlDialog(id2, title, extra = "") {
+      openDialog(
+        id2,
+        title,
+        '<input id="aq-hm-url" type="text" placeholder="Server URL" spellcheck="false" />' + extra + '<button class="aq-hm-run" id="aq-hm-run">Publish</button>'
+      );
+      const urlEl = dialog.querySelector("#aq-hm-url");
+      const runBtn = dialog.querySelector("#aq-hm-run");
+      (urlEl.value.trim() ? runBtn : urlEl).focus();
+      return { urlEl, runBtn };
+    }
+    async function runWithOverlay(runBtn, fn) {
+      const url = dialog.querySelector("#aq-hm-url")?.value.trim().replace(/\/$/, "");
+      if (!url) {
+        overlayShowError("URL required");
+        return;
+      }
+      runBtn.disabled = true;
+      overlayShowBusy();
+      try {
+        const result = await fn(url);
+        overlayHide();
+        closeAll();
+        return result;
+      } catch (e) {
+        overlayShowError("\u26A0 " + (e.message || String(e)));
+      } finally {
+        runBtn.disabled = false;
+      }
     }
     backdrop.addEventListener("click", closeAll);
     btn.addEventListener("click", () => {
@@ -9166,59 +9295,66 @@ send("AQ_PAGE_READY", { });
         e.preventDefault();
         closeAll();
       }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        dialog.querySelector("#aq-hm-run")?.click();
+      }
     });
     panel.querySelector("#aq-hm-wallet-item").addEventListener("click", async () => {
       openDialog("wallet", "Wallet", '<div class="aq-hm-none">Bet\xF6lt\xE9s\u2026</div>');
       try {
         const addrs = await getWalletAddresses();
         const rows = Object.entries(addrs).map(([k, v]) => `<tr><td>${k}</td><td>${v ?? '<span class="aq-hm-none">nincs</span>'}</td></tr>`).join("");
-        if (currentDialogId === "wallet") {
+        if (currentDialogId === "wallet")
           document.getElementById("aq-hm-dialog-body").innerHTML = rows ? `<table class="aq-hm-addr-table"><tbody>${rows}</tbody></table>` : '<div class="aq-hm-none">Nincs wallet adat.</div>';
-        }
       } catch (e) {
-        if (currentDialogId === "wallet") {
+        if (currentDialogId === "wallet")
           document.getElementById("aq-hm-dialog-body").innerHTML = `<div class="aq-hm-none">${e?.message || String(e)}</div>`;
-        }
       }
     });
     if (devMode) {
-      panel.querySelector("#aq-hm-proto-item").addEventListener("click", () => {
+      panel.querySelector("#aq-hm-clear-item").addEventListener("click", async () => {
         openDialog(
-          "proto",
-          "Refresh Protocol",
-          '<input id="aq-hm-url" type="text" placeholder="Server URL" spellcheck="false" /><button class="aq-hm-run" id="aq-hm-run">Upload</button>'
+          "clear",
+          "Clear IndexedDB",
+          '<div class="aq-hm-none" style="margin-bottom:4px">T\xF6rli az \xF6sszes helyi adatot (seed, session, storage). Visszavonhatatlan.</div><button class="aq-hm-run" id="aq-hm-run" style="background:#8b2020">T\xF6rl\xE9s</button>'
         );
-        const urlEl = dialog.querySelector("#aq-hm-url");
-        const runBtn = dialog.querySelector("#aq-hm-run");
-        urlEl.focus();
-        document.addEventListener("keydown", function onKey(e) {
-          if (dialog.hidden) {
-            document.removeEventListener("keydown", onKey);
-            return;
-          }
-          if (e.key === "Enter") {
-            e.preventDefault();
-            runBtn.click();
-          }
-        });
-        runBtn.addEventListener("click", async () => {
-          const url = urlEl.value.trim().replace(/\/$/, "");
-          if (!url) {
-            overlayShowError("URL required");
-            return;
-          }
-          runBtn.disabled = true;
-          overlayShowBusy();
+        dialog.querySelector("#aq-hm-run").addEventListener("click", async () => {
           try {
-            await runRefreshProtocol(url);
-            overlayHide();
+            const dbs = await indexedDB.databases?.() ?? [{ name: "aqSeed" }, { name: "aqSession" }, { name: "aqStorage" }];
+            await Promise.all(dbs.map(
+              ({ name }) => new Promise((res, rej) => {
+                const r = indexedDB.deleteDatabase(name);
+                r.onsuccess = res;
+                r.onerror = () => rej(r.error);
+                r.onblocked = res;
+              })
+            ));
             closeAll();
-            urlEl.value = "";
+            location.reload();
           } catch (e) {
             overlayShowError("\u26A0 " + (e.message || String(e)));
-          } finally {
-            runBtn.disabled = false;
           }
+        });
+      });
+      panel.querySelector("#aq-hm-gate-item").addEventListener("click", () => {
+        const { runBtn } = urlDialog("gate", "Publish Gate");
+        runBtn.addEventListener("click", () => runWithOverlay(runBtn, (url) => runPublishGate(url)));
+      });
+      panel.querySelector("#aq-hm-proto-item").addEventListener("click", () => {
+        const { runBtn } = urlDialog("proto", "Refresh Protocol");
+        runBtn.addEventListener("click", () => runWithOverlay(runBtn, (url) => runRefreshProtocol(url)));
+      });
+    } else {
+      panel.querySelector("#aq-hm-fork-item").addEventListener("click", () => {
+        const { runBtn } = urlDialog(
+          "fork",
+          "Fork DAO",
+          '<input id="aq-hm-tokenid" type="text" placeholder="TokenId (\xFCres = \xFAj)" spellcheck="false" />'
+        );
+        runBtn.addEventListener("click", () => {
+          const tokenId = dialog.querySelector("#aq-hm-tokenid")?.value.trim();
+          runWithOverlay(runBtn, (url) => runForkCurrentDao(url, tokenId));
         });
       });
     }

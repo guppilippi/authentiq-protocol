@@ -70,7 +70,7 @@ Az `imports` mint külön top-level szekció **megszűnt**. A külső DAO hivatk
 ### 2.2. refs (2-szintű séma, lokális és távoli)
 
 Kategorizált, névvel elérhető erőforrások.
-- Kategóriák: `js`, `css`, `json`, `html`, `others`
+- Kategóriák: `js`, `css`, `json`, `html`, `img`, `others`
 - Struktúra: `refs[category][subcategory][name] = leaf`. A subcategory + name szabadon választható.
 
 Egy `refs` levél **mindig objektum** (string forma megszűnt):

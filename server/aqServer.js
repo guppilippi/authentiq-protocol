@@ -1,14 +1,13 @@
 import { createServer } from "node:http";
-import { resolveDataRoot, requireDir, readBody, logRequest, logStartup } from "./util.js";
+import { resolveDataRoot, requireDir, readBody, logRequest, logStartup, DAO_CONTRACT } from "./util.js";
 import { initData, isWhitelisted, mintToken, setTokenCid, storeAsset, readBlob, readTokenCid } from "./aqData.js";
 import { checkTimestamp, recoverWallet, msgMintToken, msgSetSwarmHash, msgUploadAsset } from "./aqAuth.js";
 
 const PORT        = Number(process.env.AQ_PORT) || 8083;
 const LABEL       = "AQS";
-const DAO_CONTRACT = "0x64521be8d93483f5a41c40c21176137aed65296d";
 const SEL_GET     = "0xcc2fb628";
 const TOKENID_RE  = /^\d+$/;
-const CID_RE      = /^[0-9a-f]{64,128}$/i;
+const CID_RE      = /^[0-9a-f]{64}$/i;
 const MAX_UPLOAD  = Number(process.env.AQ_MAX_UPLOAD) || 10 * 1024 * 1024;
 
 const dataRoot = resolveDataRoot(import.meta.url);
@@ -162,7 +161,7 @@ const server = createServer(async (req, res) => {
 				if (cid === null) {
 					rpcOk(res, id, "0x");
 					logRequest(LABEL, method, url, 200, `tokenId=${tokenId} → revert`);
-				} else if (!CID_RE.test(cid) || cid.length !== 64) {
+				} else if (!CID_RE.test(cid)) {
 					rpcErr(res, id, -32603, `tokens/${tokenId}: invalid cid`);
 					logRequest(LABEL, method, url, 200, `tokenId=${tokenId} (bad cid)`);
 				} else {
@@ -212,7 +211,7 @@ const server = createServer(async (req, res) => {
 					logRequest(LABEL, method, url, 200, "(invalid tokenId)");
 					return;
 				}
-				if (!CID_RE.test(cid) || cid.length !== 64) {
+				if (!CID_RE.test(cid)) {
 					rpcErr(res, id, -32602, "invalid cid");
 					logRequest(LABEL, method, url, 200, "(invalid cid)");
 					return;

@@ -341,13 +341,14 @@ Ez a korlátozás nem konfigurálható és nem DAO-felülbírálható.
 ## 7. Hard block és overlay
 
 ### 7.1. Hard block
-Kritikus átmenetek során (page / DAO váltás):
-- minden protokoll-hívás tiltott,
-- kivétel: explicit ALLOW_WHILE_LOCKED listán szereplő metódusok.
 
-A tiltott hívások AQ_ERROR "[AQ] locked" választ kapnak.
+**Single-flight lock (jelenlegi implementáció):** minden `AQ_CALL` capability-hívás kizárólagos lockot vesz a futás idejére (`aqProtocolBus.js`). Amíg egy hívás fut (pl. `storageGet`), minden további `AQ_CALL` `"[AQ] locked"` hibát kap — kivéve az `ALLOW_WHILE_LOCKED` listán szereplők.
 
-Jelenlegi ALLOW_WHILE_LOCKED bejegyzés: `setStatus` (lásd §7.3).
+A tiltott hívások `AQ_ERROR "[AQ] locked"` választ kapnak.
+
+Jelenlegi `ALLOW_WHILE_LOCKED` bejegyzés: `setStatus` (lásd §7.3).
+
+**Kritikus átmenet (tervezett):** protokoll-kényszerített tokenId hash újraolvasás egyes kritikus lépéseknél (pl. DAO-váltás, szerződés aláírás). Sem a page, sem a DAO nem hagyhatja ki. A DAO is definiálhat kritikus lépést. Ez a single-flight lock-tól független, tervezett biztonsági mechanizmus.
 
 ### 7.2. Overlay
 
@@ -395,8 +396,9 @@ Nem jelent implicit protokoll-elvárást.
 ### 8.2. Origin kezelés
 - Az origin **nem trust anchor** (web3 gateway esetén nem stabil).
 - A referencia loader **hard fail**-t ad, ha a host `location.origin === "null"` (opaque origin), mert a page → host üzenetek targetOrigin-jét csak így lehet a host originre szűkíteni.
-- A host → page válaszok targetOrigin-je **`"*"`** (vállalt), mert a sandboxolt iframe originje tipikusan opaque (`allow-scripts` mellett, `allow-same-origin` nélkül).
-- Következmény: host → page irányban nincs targetOrigin-szűkítés; a védelem `ev.source` + token + reply-binding alapú.
+- A host → page válaszok targetOrigin-je **`"*"`** (vállalt), mert a sandboxolt iframe originje tipikusan opaque (`allow-scripts allow-downloads` mellett, `allow-same-origin` nélkül). Az `allow-downloads` flag szükséges ahhoz, hogy a page JS fájlletöltést kezdeményezhessen a felhasználó saját DAO-jából.
+- Következmény: a host nem szűkíti targetOriginnel a küldést; a védelem `ev.source` + token + reply-binding alapú.
+- A referencia loader page oldala (aqPageTemplate.js) emellett `ev.origin !== AQ_HOST_ORIGIN` ellenőrzést is alkalmaz — defense-in-depth második réteg, amely megakadályozza, hogy más originről érkező üzenet a page-en feldolgozódjon.
 - A `"*"` használat indoklása a token-leak szempontjából: a host válasz payload-ja tartalmazza a session tokent, de a célpont az iframe.contentWindow — a sandbox-olt page maga a token-tudó fél. Bárki, aki ezt a contentWindow-t hallgatja, már a page izolációján belül fut, így a token-leak nem szélesedik új biztonsági határon át.
 
 ### 8.3. Trust modell: origin helyett tartalom
@@ -747,16 +749,32 @@ A `_protocol` namespace adatait sem a tartalmi DAO-k, sem a fogyasztói page-ek 
 
 ### 14.2. `aqGateApi.seed.*`
 
-A seed store eléréséhez (lásd §15, §16).
+A seed store és unlock eléréséhez (lásd §15, §16, §18).
 
 | Metódus | Leírás |
 |---------|--------|
 | `seed.store(record)` | Seed rekord mentése |
 | `seed.exists()` | Visszatér `true` / `false` |
+| `seed.unlock(password?)` | Seed dekódolása, `_unlockedSeed` betöltése memóriába (jelszó vagy WebAuthn-PRF) |
+| `seed.activate(rawBytes)` | Seed közvetlen aktiválása (seed-gen után, re-decrypt nélkül) |
+
+A `seed.unlock` a teljes seed-et dekódolja és memóriában tartja — a kapu DAO a nyers seed-et nem kapja meg, de az unlock elvégezhető általa (pl. auth flow részeként).
+
+### 14.3. `aqGateApi.wallet.*`
+
+| Metódus | Leírás |
+|---------|--------|
+| `wallet.addresses()` | Az összes konfigurált wallet cím visszaadása `{ [key]: address \| null }` formában; seed szükséges |
+
+### 14.4. `aqGateApi.gate.*`
+
+| Metódus | Leírás |
+|---------|--------|
+| `gate.done()` | Auth flow befejezése: kapu DAO teardown, overlay eltüntetése |
 
 ---
 
-## 15. Seed store (`aqSeed.js`)
+## 15. Seed store (`aqKeyring.js`)
 
 A seed store egy dedikált, elkülönített IndexedDB adatbázis, amelybe a felhasználó titkosított seedje kerül. Teljesen szeparált az `aqStorage` főtárolótól.
 
@@ -786,7 +804,7 @@ Feltételek:
 
 | Hozzáférő | Olvasás | Írás |
 |-----------|---------|------|
-| Kapu DAO (`aqGateApi.seed.*`) | `exists()` csak | `store(record)` igen |
+| Kapu DAO (`aqGateApi.seed.*`) | `exists()`, `unlock()`, `activate()` | `store(record)` igen |
 | Loader belső kód (`seedGetInternal`) | igen | — |
 | Tartalmi DAO (postMessage) | nem | nem |
 
@@ -858,13 +876,13 @@ Függőség: `ethers ^6.0.0` (`loader/package.json` dependencies).
 
 - **fix**: mindig ugyanaz az index.
 - **sticky**: első használatkor véletlenszerű index a range-ben, majd IndexedDB-ben eltárolódik.
-- **oneshot**: minden operációnál a következő index (`counter + 1`), counter IndexedDB-ben perzisztál.
+- **oneshot**: minden operációnál `start + counter` (aktuális counter értékkel), majd `counter++` perzisztál IndexedDB-ben.
 
 ### 17.3. Wallet store
 
 **`getWallet(key, seedInput)`** → `{ address, sign }`
 - `seedInput`: `Uint8Array` (raw seed) → `fromRawSeed`, string → `fromMnemonic`.
-- Index meghatározás: `resolveIndex(key, def)` — fix: direkt; sticky: IndexedDB-ből vagy random; oneshot: counter++.
+- Index meghatározás: `resolveIndex(key, def)` — fix: direkt; sticky: IndexedDB-ből vagy random; oneshot: `start + counter` (aktuális), majd `counter++`.
 - Fix / sticky esetén `{ index, address }` mentődik IndexedDB-be (`wallet.<key>` kulcs, `_protocol` namespace).
 - Oneshot esetén csak `{ counter }` mentődik (address nem).
 

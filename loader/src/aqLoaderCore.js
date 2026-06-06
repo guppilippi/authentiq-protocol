@@ -38,7 +38,6 @@ export const getCfg = () => cfg;
 export const getGateCfg = () => gateCfg;
 export const getProtocolCfg = () => protocolCfg;
 export const setProtocolCfg = (v) => { protocolCfg = v; };
-export const getGateCfg     = () => gateCfg;
 export const getDaoCfg      = () => cfg;
 export const getCurrentKey = () => currentKey;
 export const getPendingInitKey = () => pendingInitKey;

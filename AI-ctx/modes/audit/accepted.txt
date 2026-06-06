@@ -22,6 +22,11 @@ Amit DOCSYNC során doksiba viszünk: törlendő innen. A doksi az elsődleges f
 - Az aqProtocol DAO config `exports`-szal megosztott refs-ei + a `gates`-ben listázott kapu DAO-k trusted-ek.
 - Forkolással öröklődik (az új aqProtocol fork a szülő exportált bejegyzéseit távoli refként viszi magával).
 
+## Remote ref integritás (audit-felvetés válasza)
+
+- WEB2 dev szerverrel a CID nem tartalom-hash — integritás a gateway felelőssége, a loader nem ellenőriz külön hash-t. Swarm esetén a CID tartalom-hash, ott kriptográfiai integritás van. Tudatos architektúrális döntés.
+- A cidBase–rpc biztonsági kötés (single RPC → same-origin vagy Swarm gateway, multi/Gnosis → csak Swarm gateway) az `aqCidBaseConfig.js`-ben kényszerített és a Guide §2.3-ban dokumentált.
+
 ## Audit szintezés (audit-felvetés válasza)
 
 - Funkció és asset szintű, nem DAO szintű.

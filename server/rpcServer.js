@@ -10,12 +10,12 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { resolveDataRoot, requireDir, readBody, logRequest, logStartup } from "./util.js";
+import { resolveDataRoot, requireDir, readBody, logRequest, logStartup, DAO_CONTRACT } from "./util.js";
 
 const PORT = 8082;
 const LABEL = "RPC";
 
-const DAO_CONTRACT = "0x64521be8d93483f5a41c40c21176137aed65296d".toLowerCase();
+const DAO_CONTRACT_LC = DAO_CONTRACT.toLowerCase();
 const SEL_getSwarmHash = "0xcc2fb628";
 
 const dataRoot = resolveDataRoot(import.meta.url);
@@ -24,7 +24,7 @@ requireDir(dataRoot, "data root");
 requireDir(tokensDir, "tokens dir");
 
 const TOKENID_RE = /^\d+$/;
-const CID_RE = /^[0-9a-f]{64,128}$/i;
+const CID_RE = /^[0-9a-f]{64}$/i;
 
 function jsonRpcResult(id, result) {
 	return JSON.stringify({ jsonrpc: "2.0", id, result });
@@ -99,7 +99,7 @@ const server = createServer(async (req, res) => {
 	const to = String(call.to || "").toLowerCase();
 	const data = String(call.data || "").toLowerCase();
 
-	if (to !== DAO_CONTRACT) {
+	if (to !== DAO_CONTRACT_LC) {
 		respond(res, 200, jsonRpcError(id, -32602, "unknown contract: " + to));
 		logRequest(LABEL, method, url, 200, `(unknown to ${to})`);
 		return;

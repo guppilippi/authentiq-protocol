@@ -133,3 +133,10 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 
 ## Ismert javítandók (AI workflow)
 
+---
+
+## Függő témák (következő session)
+
+### PWA bootstrap centralizáltság
+A PWA `start_url` stabil HTTP/HTTPS URL-t igényel — tisztán web3-ból (CID) nem szolgálható ki, mert a CID változik a tartalommal. Minimalizálható: web2 csak statikus bootstrap (index.html + manifest.json), minden más Swarmból. ENS + gateway közelít, de web2 réteg marad. Kérdés: milyen manifest-stratégia fogadható el a decentralizáltsági elvek szempontjából? → Hosszabb eszmecseré, PLAN módban.
+
