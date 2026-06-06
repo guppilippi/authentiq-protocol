@@ -4,6 +4,20 @@ Kérésre olvasandó. Automatikusan nem töltődik be.
 
 ---
 
+## 2026-06-07 — DOCSYNC: Guide §4/§13/§16/§18, Plan §14/§15
+
+- §4.1: `openTokenId` opcionális (URL param `?token=` → conf → null)
+- §4.3: loader boot flow — openTokenId feloldás, `loadGateCfgOnly` devMode session-aktív ág, `initHostMenu`
+- §13.4: ownership auto-claim kiterjesztve bármely tokenId-re (nem csak "0")
+- §16.1–16.2: seed-gen flow — `loadGateCfgOnly` ág, `loadContentDao` opcionális
+- §18.1: devMode menü — Publish aqBoot.js hozzáadva, Refresh Protocol → Publish Protocol
+- §18.3: Publish Gate — clipboard write eltávolítva
+- §18.4: Refresh Protocol → Publish Protocol (rename + clipboard write eltávolítva)
+- §18.5: Publish aqBoot.js — új szekció
+- §18.6–18.8: Fork DAO / Clear IndexedDB / processPathRefs átszámozva; processPathRefs: `boot.path` is kezeli
+- Plan §14.11: i18n architektúra (data-i18n prefix szintaxis, refs.i18n tokenized/közvetlen/nincs, feloldás, váltás, nyelvválasztó)
+- Plan §15.2: DAO és Gate state tárolás (DAO-scoped storage, gate `_protocol` namespace)
+
 ## 2026-06-05 — DOCSYNC: Guide §5/§13/§17/§18/§19
 
 - §5.1: `img` kategória hozzáadva az engedett refs listához

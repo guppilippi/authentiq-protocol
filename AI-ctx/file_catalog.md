@@ -46,7 +46,7 @@
 | loader/src/aqGateApi.js | src | Kapu DAO host-szintű API expose |
 | loader/src/aqGateRender.js | src | Kapu DAO host-szintű renderelés + aq:// preprocessing |
 | loader/src/aqKeyring.js | src | Seed tárolás + unlock (WebAuthn-PRF / password) + wallet deriváció + wallet store |
-| loader/src/aqHostMenu.js | src | Hamburger menü (mindig aktív): Wallet; devMode: Publish Gate, Refresh Protocol, Clear IndexedDB; prod: Fork DAO |
+| loader/src/aqHostMenu.js | src | Hamburger menü (mindig aktív): Wallet; devMode: Publish aqBoot.js, Publish Protocol, Publish Gate, Clear IndexedDB; prod: Fork DAO |
 | js/aqBoot.js | build | Boot bundle (esbuild output) |
 | js/aqProtocolLoader.js | build | Loader bundle — ez fut teszteléskor (esbuild output) |
 | server/aqServer.js | server | Linux WEB2 szerver (CID + RPC + asset write, port 8083) |

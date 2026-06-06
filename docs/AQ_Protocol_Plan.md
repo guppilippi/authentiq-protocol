@@ -644,6 +644,21 @@ Három összetartozó mechanizmus, a hedged requests-szel együtt alkot teljes R
 
 **Quorum**: több RPC forrás eredményének egyeztetése. Alapkonfiguráció: 3 forrás, 2 egyezés. Magasabb biztonsághoz: 5 forrás, 3 egyezés. A források egymástól független providerektől érkeznek (külön szolgáltató, saját node, publikus RPC).
 
+### 14.11. i18n (lokalizáció)
+
+**Attribútum szintaxis**: `data-i18n` prefix formátum. Textcontent default (`data-i18n="key"`); más attribútumokhoz prefix: `data-i18n="[placeholder]key;[alt]key2;textkey"`.
+
+**i18n ref a DAO configban** (`refs.i18n`):
+- Tokenized: `"i18n": { "tokenId": "105" }` → token tartalom: `{ "en": { "cid": "..." }, "hu": { "cid": "..." } }` (fordítások DAO config érintése nélkül frissíthetők)
+- Közvetlen: `"i18n": { "en": { "cid": "..." }, "hu": { "cid": "..." } }` (DAO config-ba égett CID-ek)
+- Nincs `i18n` kulcs → statikus HTML, nincs nyelvválasztó
+
+**Feloldás (loader default)**: `navigator.language` → `en` → első a listából. DAO felülírhatja saját logikával (pl. saját storage-ból visszaolvasott preferencia).
+
+**Váltás reload nélkül**: új CID fetch → DOM re-sweep + `aq:langchange` event.
+
+**Nyelvválasztó**: a gate mutatja — loader átadja a nyitott DAO elérhető nyelveit. Nincs nyitott DAO → gate saját nyelvein. Nincs `refs.i18n` → nincs nyelvválasztó.
+
 ---
 
 ## 15. Perzisztencia és GC
@@ -651,9 +666,13 @@ Három összetartozó mechanizmus, a hedged requests-szel együtt alkot teljes R
 ### 15.1. storage capability
 - már implementált és dokumentált (lásd Guide)
 
-### 15.2. Lokális workflow mentés
+### 15.2. DAO és Gate state tárolás
 
-- hash-alapú checkpoint / export
+Minden DAO saját maga kezeli persistens állapotát az `aq.storage.*` capability-ken keresztül (lásd Guide §11). A protokoll nem avatkozik be.
+
+Tárolt adatok (DAO felelőssége): aktuális oldal / lépés, kitöltött form mezők, választott nyelv. A választott nyelv DAO-scoped storage-ban él → következő megnyitáskor visszatölt → a DAO az utoljára használt nyelvén nyílik meg.
+
+**Gate state**: a `_protocol` namespace-ben tárolódik (`aqGateApi.protocolStorage.*`-on). Minimum tartalom: választott felület-nyelv + utoljára nyitott DAO tokenId → PWA újranyitáskor folytatás.
 
 ### 15.3. GC stratégia
 

@@ -81,6 +81,29 @@
 
 **Commit:** 96316de — push: main
 
+## 2026-06-06 — PLAN: PWA architektúra döntések
+
+**Döntések:**
+- PWA választva: web2 csak telepítéskor → elfogadható kompromisszum
+- Native WebView APK elvetve (PWA elegendő cross-platform célra)
+- Asztali webhely elvetve: web2 minden betöltéskor, decentralizáltság rosszabb
+- `isPwa` security gate megmarad (bio auth csak PWA-ban)
+- WebAuthn-PRF iOS Safari-ban: nem ellenőrzött → graceful fallback (csak jelszó)
+
+**PWA deploy sorrendje:**
+1. `openTokenId` opcionálissá + URL param (`?token=<tokenId>`) olvasás — **előfeltétel**
+2. `manifest.json` + ikonok (192, 512 px) + SW regisztráció
+3. Nginx statikus file serve szétválasztás + Pi deploy
+4. Pixel 7 real device teszt
+
+**Technikai megállapítás:**
+- `openTokenId` jelenleg kötelező: hiányzáskor throw (`aqProtocolLoader.js:82`)
+- Hardkódolt: `demo/html/index.html:12` — `start_url: "/"` esetén crash
+
+**Nyitott:**
+- SW update check irreleváns ha bootstrap soha nem változik
+- Cross-device PWA relay (WalletConnect-szerű): jövőbeli scope
+
 ## 2026-06-06 — PLAN: Claude Code újdonságok, ultrathink, auto-frissítés
 
 **Megállapítások:**
@@ -95,3 +118,60 @@
 **process.md változások:**
 - Ultrathink kritériumok hozzáadva (Biztos ne / Talán / Biztos)
 - Echo before execute szabály hozzáadva (Hard constraints)
+
+## 2026-06-06 — DEVp: openTokenId opcionális + Pixel 7 browser teszt előkészítés
+
+**Elvégzett:**
+- `openTokenId` opcionálissá: URL param (`?token=`) → `conf.openTokenId` → null; module-szinten feloldva, `loadContentDao` kihagyva ha null
+- Nginx `location /` hozzáadva Pi-n (statikus fájl serve)
+- `reloadNginx.ps1` létrehozva (resetServer.ps1 mintájára)
+- DEVp + DEVs process.md: mód-javaslat trigger hozzáadva (server ↔ loader munka)
+- DEVs process.md: Pi műveletek szekció (nginx reload + server reset)
+
+**Következő (DEVs):**
+- Production `index.html` (Pi URL-ekkel: damjanch.mooo.com) + deploy
+- Publish Gate + Refresh Protocol Pi-re
+- Pixel 7 browser teszt
+
+## 2026-06-07 — DEVp: Pixel 7 teszt, mobile CSS + publish flow bővítés
+
+**Elvégzett:**
+- Pixel 7 browser teszt: viewport meta hiánya → 980px virtuális viewport → fix: `demo/html/index.html`
+- `openTokenId` opcionális: `?token=` URL param → `conf.openTokenId` → null
+- `DAO_CONTRACT` lowercase mindenhol (aqRpc.js, util.js, bundled)
+- `runRefreshProtocol` → `runPublishProtocol` átnevezés
+- Új: `runPublishBoot` — `/js/aqBoot.js` feltölt, CID vágólapra
+- `processPathRefs`: `boot` field is kezeli (loader mellett)
+- `loadGateCfgOnly`: gate config betölt renderelés nélkül — devMode + session aktív esetén
+- devMode hamburger: Publish aqBoot.js + Publish Protocol + Publish Gate + Clear IndexedDB
+- `setTokenCid`: ownership auto-claim kiterjesztve bármely tokenId-re (nem csak `"0"`)
+
+**PLAN session: i18n architektúra + DAO state (döntések, state.md-be rögzítve):**
+- Attribútum szintaxis: `data-i18n="[placeholder]key;textkey"` (prefix, minden attribútum típusra)
+- i18n ref: tokenized (`tokenId`) vagy közvetlen CID-ek per nyelv; nincs kulcs → statikus, nincs nyelvválasztó
+- Feloldás: `navigator.language` → `en` → első; DAO felülírhatja
+- Váltás reload nélkül: új CID fetch → DOM re-sweep + `aq:langchange`
+- DAO state: DAO saját maga kezeli (oldal, mezők, nyelv) — protokoll nem avatkozik be
+- Gate state (minimum): választott nyelv + nyitott DAO tokenId → PWA folytatás
+
+**Rövidítés rögzítve:**
+- `shortcuts.md`: „nyiss egy <mód>-t" = új WT tab az adott módban (encoded command, setup/process.md)
+
+## 2026-06-06 — PLAN: iframe origin, PWA bootstrap, IPFS gateway
+
+**Megállapítások:**
+- Tartalmi DAO iframe: sandbox (no `allow-same-origin`) → opaque origin (null); blob URL, de az origin irreleváns
+- Host oldali security: `ev.source === iframe.contentWindow` + per-session token (16 bájt random hex)
+- Iframe oldali `ev.origin !== AQ_HOST_ORIGIN` check redundáns — a token + `ev.source !== parent` lefedi; „kódolási szépség", nem load-bearing
+- Host → iframe: `"*"` targetOrigin szükséges (null origin nem célozható); iframe → host: `AQ_HOST_ORIGIN` targetOrigin marad (értelmes)
+- Eltávolítás DEVp-ben, más loader módosítással együtt (nem önállóan)
+
+**PWA + web2 kiesés:**
+- Ha SW cache-eli a bootstrap-ot → web2 szerver kiesése után a PWA indul és használható
+- SW cache törlés: csak szándékos user action (tárterület törlés, PWA eltávolítás); véletlen kockázat alacsony
+
+**IPFS gateway mint host:**
+- `{cid}.ipfs.inbrowser.link` subdomain modell → saját origin → saját SW scope → PWA host elvileg lehetséges
+- Feltételek: immutable bootstrap (stabil CID), pinning garantált
+- Fenntartás: harmadik fél gateway (kevesebb kontroll mint saját szerver), IPFS vs Swarm hálózat-keveredés
+- Nyitott: pinning kockázat elfogadhatósága
