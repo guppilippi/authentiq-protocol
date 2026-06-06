@@ -1,5 +1,12 @@
 # Shared: DEVp + DEVs
 
+## Handoff
+
+Session indításakor: ha `runtime/handoff.md` nem üres, töltsd be — ez az előző mód átadása.  
+Mód váltás előtt: töltsd ki a `runtime/handoff.md`-t (cél, elvégzett, következő lépések, releváns fájlok), majd ürítsd ki ha az új session átvette.
+
+---
+
 ## Session-state karbantartás
 
 Minden lezárt döntés után frissítendő a `runtime/state.md`. Csak nyitott/függő állapot kerül bele — lezárt elemek törlendők. KÖTELEZŐ, HIBA ha kimarad.

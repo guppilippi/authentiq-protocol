@@ -1,6 +1,6 @@
 // aqProtocolLoader.js (entry point)
 // Boot flow:
-//   1. openTokenId ellenőrzés
+//   1. openTokenId feloldás: ?token URL param → conf.openTokenId → null
 //   2. Kapu DAO választás (precedencia)
 //   3. Seed ellenőrzés
 //      - NINCS: kapu DAO seedGen page renderelés, várakozás
@@ -15,7 +15,7 @@ import { parseRpcConfig } from "./aqRpcConfig.js";
 import { setAqRpcUrls } from "./aqAssetFetch.js";
 import { checkCidBaseSecurity } from "./aqCidBaseConfig.js";
 import {
-	loadGateDao, renderGatePage, loadContentDao, cleanupOnPageHide,
+	loadGateDao, loadGateCfgOnly, renderGatePage, loadContentDao, cleanupOnPageHide,
 	setProtocolCfg, getProtocolCfg,
 } from "./aqLoaderCore.js";
 import { setLocked, isLocked } from "./aqProtocolBus.js";
@@ -27,6 +27,8 @@ import { teardownGateDao } from "./aqGateRender.js";
 const rpcUrls = parseRpcConfig(conf.rpc, devMode);
 setAqRpcUrls(rpcUrls);
 checkCidBaseSecurity(conf.cidBase, rpcUrls, devMode);
+
+const openTokenId = new URLSearchParams(window.location.search).get("token") || conf?.openTokenId || null;
 
 const protocolCfg = window.aqProtocolConfig;
 if (!protocolCfg || typeof protocolCfg !== "object") throw new Error("[AQ] missing aqProtocolConfig");
@@ -63,7 +65,7 @@ window.aqSeedGenComplete = async function aqSeedGenComplete() {
 		} else {
 			await renderGatePage(); // defaultPage
 		}
-		await loadContentDao(conf.openTokenId);
+		if (openTokenId) await loadContentDao(openTokenId);
 		initHostMenu();
 	} catch (e) {
 		console.error(e);
@@ -78,11 +80,6 @@ window.aqSeedGenComplete = async function aqSeedGenComplete() {
 		setLocked(true);
 		overlayShowLocked(isLocked);
 		try {
-			const openTokenId = conf?.openTokenId;
-			if (typeof openTokenId !== "string" || !openTokenId) {
-				throw new Error("[AQ] openTokenId missing");
-			}
-
 			const gateName = await pickGateName();
 			const gates = getProtocolCfg().gates;
 			const gateEntry = gates ? gates[gateName] : null;
@@ -100,8 +97,10 @@ window.aqSeedGenComplete = async function aqSeedGenComplete() {
 			const sessionActive = isSeedUnlocked() || await sessionLoad();
 			if (!sessionActive) {
 				await loadGateDao(gateName, gateEntry);
+			} else if (devMode) {
+				await loadGateCfgOnly(gateEntry);
 			}
-			await loadContentDao(openTokenId);
+			if (openTokenId) await loadContentDao(openTokenId);
 			initHostMenu();
 		} catch (e) {
 			console.error(e);

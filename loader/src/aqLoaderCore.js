@@ -339,6 +339,24 @@ export async function loadDaoConfig(daoRef) {
 	await _loadDaoConfigInternal(normalized, namespace, false);
 }
 
+// Kapu DAO config betöltése renderelés nélkül (devMode publish célra).
+export async function loadGateCfgOnly(gateEntry) {
+	if (!gateEntry || typeof gateEntry !== "object") throw new Error("[AQ] loadGateCfgOnly: invalid entry");
+	let daoRef, namespace;
+	if (devMode && typeof gateEntry.path === "string") {
+		daoRef    = gateEntry.path;
+		namespace = "gate:" + (gateEntry.tokenId ?? gateEntry.path);
+	} else if (typeof gateEntry.tokenId === "string") {
+		const rpcUrls = parseRpcConfig(conf?.rpc, devMode);
+		const cid = await resolveDaoCid(gateEntry.tokenId, rpcUrls);
+		daoRef    = cid;
+		namespace = "gate:" + gateEntry.tokenId;
+	} else {
+		throw new Error("[AQ] loadGateCfgOnly: entry must have tokenId or path");
+	}
+	await _loadDaoConfigInternal(daoRef, namespace, true);
+}
+
 // Kapu DAO betöltése host-szinten.
 // pageKey: opcionális, melyik kapu page-et rendereljen. Default: gateCfg.defaultPage.
 export async function loadGateDao(gateName, gateEntry, pageKey) {

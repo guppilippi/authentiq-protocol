@@ -54,7 +54,7 @@ export function logRequest(label, method, url, status, extra) {
 	console.log(`[${ts}] ${label} ${method} ${url} → ${status}${tail}`);
 }
 
-export const DAO_CONTRACT = "0x64521be8D93483f5A41c40c21176137aEd65296D";
+export const DAO_CONTRACT = "0x64521be8d93483f5a41c40c21176137aed65296d";
 
 // Egysoros startup log.
 export function logStartup(label, port, dataDir) {

@@ -8499,7 +8499,7 @@ send("AQ_PAGE_READY", { });
   }
 
   // src/aqRpc.js
-  var DAO_CONTRACT = "0x64521be8D93483f5A41c40c21176137aEd65296D";
+  var DAO_CONTRACT = "0x64521be8d93483f5a41c40c21176137aed65296d";
   var SEL_getSwarmHash = "0xcc2fb628";
   var transient = (msg) => {
     const e = new Error(msg);
@@ -8939,6 +8939,22 @@ send("AQ_PAGE_READY", { });
     const namespace = typeof normalized === "string" ? normalized : normalized.cid ? "cid:" + normalized.cid : normalized.path;
     await _loadDaoConfigInternal(normalized, namespace, false);
   }
+  async function loadGateCfgOnly(gateEntry) {
+    if (!gateEntry || typeof gateEntry !== "object") throw new Error("[AQ] loadGateCfgOnly: invalid entry");
+    let daoRef, namespace;
+    if (devMode && typeof gateEntry.path === "string") {
+      daoRef = gateEntry.path;
+      namespace = "gate:" + (gateEntry.tokenId ?? gateEntry.path);
+    } else if (typeof gateEntry.tokenId === "string") {
+      const rpcUrls2 = parseRpcConfig(conf?.rpc, devMode);
+      const cid = await resolveDaoCid(gateEntry.tokenId, rpcUrls2);
+      daoRef = cid;
+      namespace = "gate:" + gateEntry.tokenId;
+    } else {
+      throw new Error("[AQ] loadGateCfgOnly: entry must have tokenId or path");
+    }
+    await _loadDaoConfigInternal(daoRef, namespace, true);
+  }
   async function loadGateDao(gateName, gateEntry, pageKey) {
     if (!gateEntry || typeof gateEntry !== "object") throw new Error("[AQ] loadGateDao: invalid entry");
     let daoRef;
@@ -8964,18 +8980,18 @@ send("AQ_PAGE_READY", { });
     const gateAssets = await _resolveGatePageAssets(pageKey);
     await renderGateDao(gateAssets);
   }
-  async function loadContentDao(openTokenId) {
-    if (typeof openTokenId !== "string" || !openTokenId) {
+  async function loadContentDao(openTokenId2) {
+    if (typeof openTokenId2 !== "string" || !openTokenId2) {
       throw new Error("[AQ] openTokenId missing");
     }
-    if (openTokenId.startsWith("/")) {
+    if (openTokenId2.startsWith("/")) {
       if (!devMode) throw new Error("[AQ] openTokenId: path not allowed (non-devMode)");
-      const namespace2 = openTokenId;
-      await _loadDaoConfigInternal(openTokenId, namespace2, false);
+      const namespace2 = openTokenId2;
+      await _loadDaoConfigInternal(openTokenId2, namespace2, false);
       return;
     }
     const rpcUrls2 = parseRpcConfig(conf?.rpc, devMode);
-    const cid = await resolveDaoCid(openTokenId, rpcUrls2);
+    const cid = await resolveDaoCid(openTokenId2, rpcUrls2);
     const namespace = "cid:" + cid;
     await _loadDaoConfigInternal(cid, namespace, false);
   }
@@ -9087,19 +9103,19 @@ send("AQ_PAGE_READY", { });
         }
       }
     }
-    if (result.loader?.path) {
-      overlaySetLabel("Uploading loader\u2026");
-      const resp = await fetch(result.loader.path, { cache: "no-store" });
-      if (!resp.ok) throw new Error(`fetch loader: ${resp.status}`);
-      const cid = await uploadAsset(serverUrl, wallet, new Uint8Array(await resp.arrayBuffer()));
-      result.loader = { cid };
+    for (const field of ["boot", "loader"]) {
+      if (result[field]?.path) {
+        overlaySetLabel(`Uploading ${field}\u2026`);
+        const resp = await fetch(result[field].path, { cache: "no-store" });
+        if (!resp.ok) throw new Error(`fetch ${field}: ${resp.status}`);
+        const cid = await uploadAsset(serverUrl, wallet, new Uint8Array(await resp.arrayBuffer()));
+        result[field] = { cid };
+      }
     }
     return result;
   }
   async function runPublishGate(serverUrl) {
     const wallet = fromRawSeed(seedGetRaw(), 1e3);
-    navigator.clipboard.writeText(wallet.address).catch(() => {
-    });
     const rawCfg = getGateCfg();
     if (!rawCfg) throw new Error("Gate config not loaded");
     const forPublish = JSON.parse(JSON.stringify(rawCfg));
@@ -9114,10 +9130,18 @@ send("AQ_PAGE_READY", { });
     overlaySetLabel("Setting gate tokenId=1 \u2192 CID\u2026");
     await setSwarmHash(serverUrl, wallet, "1", cfgCid);
   }
-  async function runRefreshProtocol(serverUrl) {
+  async function runPublishBoot(serverUrl) {
     const wallet = fromRawSeed(seedGetRaw(), 1e3);
-    navigator.clipboard.writeText(wallet.address).catch(() => {
+    overlaySetLabel("Uploading aqBoot.js\u2026");
+    const resp = await fetch("/js/aqBoot.js", { cache: "no-store" });
+    if (!resp.ok) throw new Error(`fetch aqBoot.js: ${resp.status}`);
+    const cid = await uploadAsset(serverUrl, wallet, new Uint8Array(await resp.arrayBuffer()));
+    navigator.clipboard.writeText(cid).catch(() => {
     });
+    return cid;
+  }
+  async function runPublishProtocol(serverUrl) {
+    const wallet = fromRawSeed(seedGetRaw(), 1e3);
     const rawCfg = getProtocolCfg();
     if (!rawCfg) throw new Error("Protocol config not loaded");
     const forPublish = JSON.parse(JSON.stringify(rawCfg));
@@ -9194,8 +9218,10 @@ send("AQ_PAGE_READY", { });
     let panelHtml = "<h3>AQ</h3>";
     panelHtml += '<div class="aq-hm-item" id="aq-hm-wallet-item" tabindex="0">Wallet</div>';
     if (devMode) {
+      panelHtml += "<h3>Dev</h3>";
+      panelHtml += '<div class="aq-hm-item" id="aq-hm-boot-item"  tabindex="0">Publish aqBoot.js</div>';
+      panelHtml += '<div class="aq-hm-item" id="aq-hm-proto-item" tabindex="0">Publish Protocol</div>';
       panelHtml += '<div class="aq-hm-item" id="aq-hm-gate-item"  tabindex="0">Publish Gate</div>';
-      panelHtml += '<div class="aq-hm-item" id="aq-hm-proto-item" tabindex="0">Refresh Protocol</div>';
       panelHtml += '<div class="aq-hm-item" id="aq-hm-clear-item" tabindex="0" style="color:#c44">Clear IndexedDB</div>';
     } else {
       panelHtml += '<div class="aq-hm-item" id="aq-hm-fork-item"  tabindex="0">Fork DAO</div>';
@@ -9342,8 +9368,12 @@ send("AQ_PAGE_READY", { });
         runBtn.addEventListener("click", () => runWithOverlay(runBtn, (url) => runPublishGate(url)));
       });
       panel.querySelector("#aq-hm-proto-item").addEventListener("click", () => {
-        const { runBtn } = urlDialog("proto", "Refresh Protocol");
-        runBtn.addEventListener("click", () => runWithOverlay(runBtn, (url) => runRefreshProtocol(url)));
+        const { runBtn } = urlDialog("proto", "Publish Protocol");
+        runBtn.addEventListener("click", () => runWithOverlay(runBtn, (url) => runPublishProtocol(url)));
+      });
+      panel.querySelector("#aq-hm-boot-item").addEventListener("click", () => {
+        const { runBtn } = urlDialog("boot", "Publish aqBoot.js");
+        runBtn.addEventListener("click", () => runWithOverlay(runBtn, (url) => runPublishBoot(url)));
       });
     } else {
       panel.querySelector("#aq-hm-fork-item").addEventListener("click", () => {
@@ -9501,6 +9531,7 @@ send("AQ_PAGE_READY", { });
   var rpcUrls = parseRpcConfig(conf.rpc, devMode);
   setAqRpcUrls(rpcUrls);
   checkCidBaseSecurity(conf.cidBase, rpcUrls, devMode);
+  var openTokenId = new URLSearchParams(window.location.search).get("token") || conf?.openTokenId || null;
   var protocolCfg2 = window.aqProtocolConfig;
   if (!protocolCfg2 || typeof protocolCfg2 !== "object") throw new Error("[AQ] missing aqProtocolConfig");
   setProtocolCfg(protocolCfg2);
@@ -9544,7 +9575,7 @@ send("AQ_PAGE_READY", { });
       } else {
         await renderGatePage();
       }
-      await loadContentDao(conf.openTokenId);
+      if (openTokenId) await loadContentDao(openTokenId);
       initHostMenu();
     } catch (e) {
       console.error(e);
@@ -9558,10 +9589,6 @@ send("AQ_PAGE_READY", { });
       setLocked(true);
       overlayShowLocked(isLocked);
       try {
-        const openTokenId = conf?.openTokenId;
-        if (typeof openTokenId !== "string" || !openTokenId) {
-          throw new Error("[AQ] openTokenId missing");
-        }
         const gateName = await pickGateName();
         const gates = getProtocolCfg().gates;
         const gateEntry = gates ? gates[gateName] : null;
@@ -9574,8 +9601,10 @@ send("AQ_PAGE_READY", { });
         const sessionActive = isSeedUnlocked() || await sessionLoad();
         if (!sessionActive) {
           await loadGateDao(gateName, gateEntry);
+        } else if (devMode) {
+          await loadGateCfgOnly(gateEntry);
         }
-        await loadContentDao(openTokenId);
+        if (openTokenId) await loadContentDao(openTokenId);
         initHostMenu();
       } catch (e) {
         console.error(e);

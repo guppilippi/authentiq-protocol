@@ -2,7 +2,7 @@
 // Gnosis chain RPC kliens a tokenId → Swarm hash feloldáshoz.
 // Megosztható a boot.js és a loader között.
 
-export const DAO_CONTRACT = "0x64521be8D93483f5A41c40c21176137aEd65296D";
+export const DAO_CONTRACT = "0x64521be8d93483f5a41c40c21176137aed65296d";
 export const SEL_getSwarmHash = "0xcc2fb628";
 
 const transient = (msg) => {

@@ -8,6 +8,12 @@
 
 ---
 
+## Mód-javaslat
+
+Ha a munka áttér Pi / nginx / szerver oldalra (deploy, nginx konfig, server kód): `[mód-javaslat]: server munka → DEVs`
+
+---
+
 ## Build
 
 A `loader/src/*.js` módosítása után a build automatikusan készül (`npm run watch` fut a háttérben) — manuális build parancs nem szükséges, ne adj ki.

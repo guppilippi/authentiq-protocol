@@ -95,13 +95,15 @@ async function processPathRefs(serverUrl, wallet, config) {
 		}
 	}
 
-	// Loader path → CID
-	if (result.loader?.path) {
-		overlaySetLabel("Uploading loader…");
-		const resp = await fetch(result.loader.path, { cache: "no-store" });
-		if (!resp.ok) throw new Error(`fetch loader: ${resp.status}`);
-		const cid = await uploadAsset(serverUrl, wallet, new Uint8Array(await resp.arrayBuffer()));
-		result.loader = { cid };
+	// Boot + loader path → CID
+	for (const field of ["boot", "loader"]) {
+		if (result[field]?.path) {
+			overlaySetLabel(`Uploading ${field}…`);
+			const resp = await fetch(result[field].path, { cache: "no-store" });
+			if (!resp.ok) throw new Error(`fetch ${field}: ${resp.status}`);
+			const cid = await uploadAsset(serverUrl, wallet, new Uint8Array(await resp.arrayBuffer()));
+			result[field] = { cid };
+		}
 	}
 
 	return result;
@@ -112,7 +114,6 @@ async function processPathRefs(serverUrl, wallet, config) {
 
 async function runPublishGate(serverUrl) {
 	const wallet = fromRawSeed(seedGetRaw(), 1000);
-	navigator.clipboard.writeText(wallet.address).catch(() => {});
 
 	const rawCfg = getGateCfg();
 	if (!rawCfg) throw new Error("Gate config not loaded");
@@ -130,9 +131,18 @@ async function runPublishGate(serverUrl) {
 	await setSwarmHash(serverUrl, wallet, "1", cfgCid);
 }
 
-async function runRefreshProtocol(serverUrl) {
+async function runPublishBoot(serverUrl) {
 	const wallet = fromRawSeed(seedGetRaw(), 1000);
-	navigator.clipboard.writeText(wallet.address).catch(() => {});
+	overlaySetLabel("Uploading aqBoot.js…");
+	const resp = await fetch("/js/aqBoot.js", { cache: "no-store" });
+	if (!resp.ok) throw new Error(`fetch aqBoot.js: ${resp.status}`);
+	const cid = await uploadAsset(serverUrl, wallet, new Uint8Array(await resp.arrayBuffer()));
+	navigator.clipboard.writeText(cid).catch(() => {});
+	return cid;
+}
+
+async function runPublishProtocol(serverUrl) {
+	const wallet = fromRawSeed(seedGetRaw(), 1000);
 
 	const rawCfg = getProtocolCfg();
 	if (!rawCfg) throw new Error("Protocol config not loaded");
@@ -222,8 +232,10 @@ export function initHostMenu() {
 	let panelHtml = "<h3>AQ</h3>";
 	panelHtml += '<div class="aq-hm-item" id="aq-hm-wallet-item" tabindex="0">Wallet</div>';
 	if (devMode) {
+		panelHtml += '<h3>Dev</h3>';
+		panelHtml += '<div class="aq-hm-item" id="aq-hm-boot-item"  tabindex="0">Publish aqBoot.js</div>';
+		panelHtml += '<div class="aq-hm-item" id="aq-hm-proto-item" tabindex="0">Publish Protocol</div>';
 		panelHtml += '<div class="aq-hm-item" id="aq-hm-gate-item"  tabindex="0">Publish Gate</div>';
-		panelHtml += '<div class="aq-hm-item" id="aq-hm-proto-item" tabindex="0">Refresh Protocol</div>';
 		panelHtml += '<div class="aq-hm-item" id="aq-hm-clear-item" tabindex="0" style="color:#c44">Clear IndexedDB</div>';
 	} else {
 		panelHtml += '<div class="aq-hm-item" id="aq-hm-fork-item"  tabindex="0">Fork DAO</div>';
@@ -378,11 +390,18 @@ export function initHostMenu() {
 				runWithOverlay(runBtn, (url) => runPublishGate(url)));
 		});
 
-		// --- Refresh Protocol ---
+		// --- Publish Protocol ---
 		panel.querySelector("#aq-hm-proto-item").addEventListener("click", () => {
-			const { runBtn } = urlDialog("proto", "Refresh Protocol");
+			const { runBtn } = urlDialog("proto", "Publish Protocol");
 			runBtn.addEventListener("click", () =>
-				runWithOverlay(runBtn, (url) => runRefreshProtocol(url)));
+				runWithOverlay(runBtn, (url) => runPublishProtocol(url)));
+		});
+
+		// --- Publish aqBoot.js ---
+		panel.querySelector("#aq-hm-boot-item").addEventListener("click", () => {
+			const { runBtn } = urlDialog("boot", "Publish aqBoot.js");
+			runBtn.addEventListener("click", () =>
+				runWithOverlay(runBtn, (url) => runPublishBoot(url)));
 		});
 
 	} else {

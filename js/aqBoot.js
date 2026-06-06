@@ -38,7 +38,7 @@
   }
 
   // src/aqRpc.js
-  var DAO_CONTRACT = "0x64521be8D93483f5A41c40c21176137aEd65296D";
+  var DAO_CONTRACT = "0x64521be8d93483f5a41c40c21176137aed65296d";
   var SEL_getSwarmHash = "0xcc2fb628";
   var transient = (msg) => {
     const e = new Error(msg);

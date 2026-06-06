@@ -55,8 +55,8 @@ export async function mintToken(wallet) {
 export async function setTokenCid(tokenId, cid, wallet) {
 	return serialized(async () => {
 		const own = await readOwnership();
-		if (tokenId === "0" && !own["0"]) {
-			own["0"] = wallet.toLowerCase();
+		if (!own[tokenId]) {
+			own[tokenId] = wallet.toLowerCase();
 			await writeOwnership(own);
 		}
 		if (own[tokenId]?.toLowerCase() !== wallet.toLowerCase()) {

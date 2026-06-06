@@ -8,6 +8,23 @@
 
 ---
 
+## Mód-javaslat
+
+Ha a munka áttér loader / protokoll / frontend oldalra (`loader/src/`): `[mód-javaslat]: loader munka → DEVp`
+
+---
+
+## Pi műveletek
+
+| Művelet | Script | Indítás |
+|---------|--------|---------|
+| Nginx reload | `reloadNginx.ps1` | `Start-Process powershell -ArgumentList "-File", "C:\Projects\AuthentiQ\reloadNginx.ps1"` |
+| Server adat reset | `resetServer.ps1` | `Start-Process powershell -ArgumentList "-File", "C:\Projects\AuthentiQ\resetServer.ps1"` |
+
+Mindkét ablak Enter leütésre bezárul.
+
+---
+
 ## Server deploy workflow
 
 Server fájl (`aqServer.js`, `aqAuth.js`, `aqData.js`, `util.js`) módosítása után:
