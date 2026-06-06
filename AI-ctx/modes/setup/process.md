@@ -21,9 +21,16 @@ Hookök és permissions: `~/.claude/settings.json`. Backup: `AI-ctx/claude_setti
 
 ## Tab / session kezelés
 
-- Claude nyitja az új tabot kérésre (`wt new-tab --title "AQ | <mód>"`)
+- Claude nyitja az új tabot kérésre (encoded command a quoting miatt):
+  ```powershell
+  $cmd = 'claude "<mód>"'
+  $enc = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd))
+  wt --window 0 new-tab --profile "AQ Claude" --title "AQ | <mód>" powershell -EncodedCommand $enc
+  ```
+- `--window 0` kötelező — nélküle új ablakban nyílik
+- `--profile "AQ Claude"` — suppressApplicationTitle:true profil, title rögzített marad
+- `claude "<mód>"` interaktív sessiont indít a mód nevével mint első üzenet
 - Session marker: `runtime/sessions/<mód>.pid` — duplikáció detektáláshoz
-- Mód az állapotsorban minden válaszban: `🟢 Status: OK | Mód: <mód>`
 
 ---
 

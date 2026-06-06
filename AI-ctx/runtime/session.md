@@ -38,6 +38,14 @@
 - accepted.txt #20 (seed store) ellenőrizendő Guide-ban DOCSYNC alkalmával
 - Hook javítandók implementálása (wakelock PID, PermissionRequest tab-váltás) — SETUP módban
 
+## 2026-06-05 — Stop hook CTX% + process.md context-awareness
+
+**Elvégzett:**
+- Stop hook reírva: kumulatív összeg → utolsó üzenet CTX% (input+cacheRead / 200k)
+- Formátum: `[CTX X% LOW/MID/HIGH | in:Xk cR:Xk ki:Xk]`
+- process.md bővítve: CTX reakció tábla + `[mód-javaslat]` minta
+- settings.json + claude_settings_backup.json szinkronban
+
 **Git kész (2026-06-05):**
 - Főprojektből git init, .gitignore (node_modules, .lnk, desktop.ini, .tmp.driveupload)
 - Remote: https://github.com/guppilippi/authentiq-protocol.git
@@ -48,3 +56,18 @@
 - Marad (nincs máshol): #3 részlete, #4, #9, #18 (konkrét súlyok)
 - Átkerül runtime/state.md-be: #1 (projekt-állapot)
 - #20 (seed store) még ellenőrizendő Guide-ban
+
+## 2026-06-06 — PLAN: Claude Code újdonságok, ultrathink, auto-frissítés
+
+**Megállapítások:**
+- Claude Code 2.1.165 naprakész; auto-frissítés működik (kilépéskor írja felül a fájlt, Windows file-lock megkerülve)
+- Ultrathink kritériumok bekerültek `process.md`-be (Biztos ne / Talán / Biztos táblázat)
+- Thinking tokenek a CTX stop hook kimenetében nem látszanak (`ki` csak látható output)
+- Memory fájl létrehozása nem engedélyezett felhasználói jóváhagyás nélkül
+
+**Nyitott:**
+- „Empty/minimális mód" (legolcsóbb session) — fogalom létezik, nincs definiálva; korábbi sessionből, session.md-ben nincs nyoma
+
+**process.md változások:**
+- Ultrathink kritériumok hozzáadva (Biztos ne / Talán / Biztos)
+- Echo before execute szabály hozzáadva (Hard constraints)
