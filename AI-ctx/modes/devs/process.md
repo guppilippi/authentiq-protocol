@@ -18,8 +18,8 @@ Ha a munka áttér loader / protokoll / frontend oldalra (`loader/src/`): `[mód
 
 | Művelet | Script | Indítás |
 |---------|--------|---------|
-| Nginx reload | `reloadNginx.ps1` | `Start-Process powershell -ArgumentList "-File", "C:\Projects\AuthentiQ\reloadNginx.ps1"` |
-| Server adat reset | `resetServer.ps1` | `Start-Process powershell -ArgumentList "-File", "C:\Projects\AuthentiQ\resetServer.ps1"` |
+| Nginx reload | `scripts/reloadNginx.ps1` | `Start-Process powershell -ArgumentList "-File", "C:\Projects\AuthentiQ\scripts\reloadNginx.ps1"` |
+| Server adat reset | `scripts/resetServer.ps1` | `Start-Process powershell -ArgumentList "-File", "C:\Projects\AuthentiQ\scripts\resetServer.ps1"` |
 
 Mindkét ablak Enter leütésre bezárul.
 
@@ -32,7 +32,7 @@ Server fájl (`aqServer.js`, `aqAuth.js`, `aqData.js`, `util.js`) módosítása 
 1. Lokális tesztelés
 2. Deploy indítása:
    ```powershell
-   Start-Process powershell -ArgumentList "-Command ""cd 'C:\Projects\AuthentiQ'; .\deployServer.ps1"""
+   Start-Process powershell -ArgumentList "-Command ""cd 'C:\Projects\AuthentiQ'; .\scripts\deployServer.ps1"""
    ```
 3. Két passphrase prompt (pscp + plink) — felhasználó írja be
 4. Script folyamata: `/tmp/`-be tölt → `sudo cp` célba → `sudo systemctl restart aq-server.service` → cleanup

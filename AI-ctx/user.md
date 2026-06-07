@@ -21,6 +21,7 @@ Minden módban betöltődik. A kommunikáció és együttműködés személyre s
 - Tesztelés valódi adattal, valódi eszközzel — nem mock
 - Nem szeret duplikálni — shared megoldást preferál copy fölött
 - Réteg-kétértelűség esetén (pl. app szintű vs. tool/infrastruktúra kérdés) — először a réteget azonosítsd
+- Párhuzamos tab workflow: devp tabban dolgozik közben, PLAN/DOCSYNC tabból kér szinkront — state.md és session.md frissítés ilyenkor kötelező
 
 ## Fejlesztői elvek
 

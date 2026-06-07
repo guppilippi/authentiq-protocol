@@ -607,7 +607,7 @@ A 3 port külön domain szimulációt szolgál (CORS-szerű cross-origin kontext
 
 ### 12.2. Indítás
 
-`startServers.ps1` (PowerShell) `concurrently`-vel négy processzt indít:
+`scripts/startServers.ps1` (PowerShell) `concurrently`-vel négy processzt indít:
 
 ```
 WEB    (green)   — npx serve -l 8080 .
@@ -723,7 +723,7 @@ Példa: `["0x4fe481e8df86f415ffd5476ce6cfc15439234077"]`
 
 - Raspberry Pi, systemd service (`aq-server.service`), nginx reverse proxy.
 - Elérés: `https://damjanch.mooo.com` (nginx terminál SSL, proxyzza `/rpc`, `/cid/`, `/aq/` útvonalakat → `http://127.0.0.1:8083`).
-- Deploy script: `deployServer.ps1` (pscp + plink, két passphrase prompt).
+- Deploy script: `scripts/deployServer.ps1` (pscp + plink, két passphrase prompt).
 
 ---
 

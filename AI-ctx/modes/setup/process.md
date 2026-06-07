@@ -13,12 +13,6 @@ AI workflow karbantartás: AI-ctx struktúra, CLAUDE.md, hookök, permissions, s
 
 ---
 
-## Claude Code beállítások
-
-Hookök és permissions: `~/.claude/settings.json`. Backup: `AI-ctx/claude_settings_backup.json` — mindig szinkronban tartandó. Ha új beállítás kerül a settings.json-ba: egyszerre frissítendő a backup is.
-
----
-
 ## Tab / session kezelés
 
 - Claude nyitja az új tabot kérésre (encoded command a quoting miatt):

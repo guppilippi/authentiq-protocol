@@ -91,7 +91,7 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 ### Server reset (kész)
 
 - `server/resetData.js` — `AQ_DATA_ROOT` env var; blobs/tokens/wallets/trash törlés + ownership.json reset
-- `resetServer.ps1` — SCP + sudo rm via plink; külön ablak; Enter után bezárul
+- `scripts/resetServer.ps1` — SCP + sudo rm via plink; külön ablak; Enter után bezárul
 
 ### TokenId foglalás (lezárt)
 

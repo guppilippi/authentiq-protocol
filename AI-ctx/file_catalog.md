@@ -21,7 +21,6 @@
 | AI-ctx/runtime/changelog.md | ai | Elvégzett munka, változástörténet — csak kérésre |
 | AI-ctx/runtime/session.md | ai | Session notes — crash recovery, kulcspontok |
 | AI-ctx/runtime/handoff.md | ai | Mód-ok közötti kommunikáció |
-| AI-ctx/claude_settings_backup.json | ai | Globális Claude Code settings backup (hookök, permissions) |
 | docs/AQ_Protocol_Canonical_Manifest.md | doc | Normatív protokoll alapelvek |
 | docs/AQ_Protocol_Concepts.md | doc | Nem normatív mentális modellek |
 | docs/AQ_Protocol_Implementation_Guide.md | doc | Referencia implementáció leírás |
@@ -56,8 +55,13 @@
 | server/rpcServer.js | server | Dev RPC mock szerver |
 | server/util.js | server | Szerver segédeszközök |
 | server/resetData.js | server | Szerver adat reset script (blobs/tokens/wallets/trash törlés, ownership.json reset) |
-| startServers.ps1 | dev | Dev szerverek indítója |
-| resetServer.ps1 | dev | Pi szerver adat reset (SCP + sudo rm, külön ablakban) |
+| scripts/startServers.ps1 | dev | Dev szerverek indítója |
+| scripts/deployServer.ps1 | dev | Pi server deploy (pscp + plink, külön ablakban) |
+| scripts/resetServer.ps1 | dev | Pi szerver adat reset (SCP + sudo rm, külön ablakban) |
+| scripts/reloadNginx.ps1 | dev | Pi nginx reload (plink, külön ablakban) |
+| scripts/allowed/save-screenshot.ps1 | dev | Clipboard kép → AI-ctx/runtime/screenshot.png (Claude futtatja) |
+| scripts/title-watcher.ps1 | dev | WT tab title fájl watcher (AQ Claude WT profil indítja) |
+| scripts/allowed/set-title.ps1 | dev | WT tab title írás (kérdés nélkül futhat) |
 | demo/html/index.html | demo | Host page — dev tesztelési belépőpont (openTokenId path-alapú) |
 | demo/gate-test/config.json | demo | Kapu DAO config (gate neve: "aq", tokenId=1) |
 | demo/gate-test/logo.png | demo | AuthentiQ logó (PNG, aq:// sémán keresztül töltődik be) |

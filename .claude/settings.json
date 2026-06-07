@@ -1,4 +1,9 @@
 {
+  "permissions": {
+    "allow": [
+      "PowerShell(.\\scripts\\allowed\\*)"
+    ]
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -51,6 +56,5 @@
         ]
       }
     ]
-  },
-  "tui": "fullscreen"
+  }
 }

@@ -21,6 +21,13 @@ KÖTELEZŐ minden válasz ELEJÉN.
 
 ---
 
+## Mód aktiválás
+
+Session indításakor vagy mód váltáskor KÖTELEZŐ, az állapotsor után futtatandó (PowerShell tool call):
+`.\scripts\allowed\set-title.ps1 -Title "AQ | <mód>"`
+
+---
+
 ## Hard constraints
 
 - Utasítás végrehajtása előtt, ha az értelmezés nem triviális: egy sorban visszatükrözni mit értettél, aztán cselekedni. Szinkronban van a kontextus? Ha nem, ott derül ki — mielőtt bármit csinálnál.
@@ -116,4 +123,4 @@ Ha a session lezárul (felhasználó jelzi, vagy Claude `[mód-javaslat]` / `[mo
 
 ## Egyéni Claude Code beállítások
 
-Hookök és permissions: `~/.claude/settings.json`. Backup: `AI-ctx/claude_settings_backup.json` — mindig szinkronban tartandó. Ha új beállítás kerül a `settings.json`-ba, egyszerre frissítendő a backup is.
+AQ-specifikus hookök és permissions: `.claude/settings.json` (projekt, gitbe kerül). Globális: `~/.claude/settings.json` (csak `tui: fullscreen`).

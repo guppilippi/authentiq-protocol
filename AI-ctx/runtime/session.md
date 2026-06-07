@@ -133,6 +133,13 @@
 - Publish Gate + Refresh Protocol Pi-re
 - Pixel 7 browser teszt
 
+## 2026-06-07 — DOCSYNC: Guide §4/§13/§16/§18, Plan §14/§15
+
+**Elvégzett:**
+- Guide: openTokenId opcionális, loadGateCfgOnly, ownership auto-claim, §18 publish flow bővítés + átszámozás
+- Plan §14.11: i18n architektúra; §15.2: DAO + Gate state tárolás
+- Commit: b17afa9, cf2921c — push: main
+
 ## 2026-06-07 — DEVp: Pixel 7 teszt, mobile CSS + publish flow bővítés
 
 **Elvégzett:**
@@ -156,6 +163,34 @@
 
 **Rövidítés rögzítve:**
 - `shortcuts.md`: „nyiss egy <mód>-t" = új WT tab az adott módban (encoded command, setup/process.md)
+
+## 2026-06-07 — SETUP: scripts/ struktúra + .claude/settings.json + title watcher
+
+**Elvégzett:**
+- `scripts/` + `scripts/allowed/` létrehozva; deployServer, resetServer, reloadNginx, startServers átmozgatva
+- `.claude/settings.json` (project-szintű, git): összes AQ hook (UserPromptSubmit wakelock, PermissionRequest toast, Stop CTX+wakelock+toast, PreCompact block) + `PowerShell(.\scripts\allowed\*)` engedély
+- `~/.claude/settings.json` lecsupaszítva: csak `tui: fullscreen`
+- `scripts/allowed/save-screenshot.ps1`: clipboard kép → AI-ctx/runtime/screenshot.png
+- `scripts/allowed/set-title.ps1`: WT_SESSION temp file írás
+- `scripts/title-watcher.ps1`: FileSystemWatcher + child PS process OSC write
+- `$PROFILE` (`Microsoft.PowerShell_profile.ps1`): `. 'C:\Projects\AuthentiQ\scripts\title-watcher.ps1'`
+
+**Title watcher debug folyamat:**
+- Root cause 1: WT_SESSION per-tab (nem per-window) → watcher és Claude Code same tabban kell
+- Root cause 2: `[Console]::Write()` background runspace-ből nem ír terminálra
+- Root cause 3: `\\.\CONOUT$` (File.Open) sem működött (PS .NET path handling)
+- Fix: `Register-ObjectEvent` action block → child PS process (`UseShellExecute=$false`, `CreateNoWindow=$false`) → örökli szülő tab konzolját → `[Console]::Write()` ott működik
+- Diagnosztika: log file → event elsül ✓ → csak write mechanizmus volt a baj
+- Tesztelve: tab 2 title = "AQ | TEST" ✓
+
+**Teljes flow (következő session-től aktív):**
+1. Új WT tab → $PROFILE betölti watchert (tab saját WT_SESSION-nel)
+2. Ugyanabból: `cd C:\Projects\AuthentiQ` → `claude`
+3. Mode switch → `set-title.ps1` → fájl változás → watcher → child PS → OSC → WT title ✓
+
+**File catalog + TSV frissítve, process.md Mód aktiválás szekció frissítve**
+
+---
 
 ## 2026-06-06 — PLAN: iframe origin, PWA bootstrap, IPFS gateway
 
