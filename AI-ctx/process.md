@@ -48,7 +48,7 @@ Nagy fájlok (400+ sor): `offset`/`limit` paraméterekkel végig kell olvasni. C
 ## Új fájl nyilvántartása
 
 Ha új fájl keletkezik:
-- **Doc vagy src kategória**: azonnal felveszi a `file_catalog.md`-be és a `file_catalog.tsv`-be, és emlékeztet: `[drive-sheet]: <fájlnév> felkerült a katalógusba — Drive sheeten is frissítsd.`
+- **Doc vagy src kategória**: azonnal felveszi a `file_catalog.md`-be.
 - **Egyéb** (demo, script, temp): megkérdezi: `[katalógus?]: <fájlnév> — felkerüljön?`
 
 ---
