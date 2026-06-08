@@ -23,7 +23,7 @@ KÖTELEZŐ minden válasz ELEJÉN.
 
 ## Mód aktiválás
 
-Session indításkor: `.\scripts\allowed\set-title.ps1 "AQ | <mód>"` → vágólapra kerül a `/rename AQ | <mód>` parancs.  
+Session indításkor: `Set-Clipboard -Value "/rename AQ | <mód>"` → vágólapra kerül a `/rename AQ | <mód>` parancs.  
 Jelzés a felhasználónak: `[title] Ctrl+V + Enter`
 
 ---

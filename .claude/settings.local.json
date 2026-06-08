@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Write(C:\\Projects\\AuthentiQ\\AI-ctx\\runtime\\*)",
-      "Edit(C:\\Projects\\AuthentiQ\\AI-ctx\\runtime\\*)"
+      "Edit(C:\\Projects\\AuthentiQ\\AI-ctx\\runtime\\*)",
+      "PowerShell(Add-Type -AssemblyName System.Windows.Forms, System.Drawing; $img = [System.Windows.Forms.Clipboard]::GetImage\\(\\); if \\($img\\) { $img.Save\\(\"C:\\\\Projects\\\\AuthentiQ\\\\AI-ctx\\\\runtime\\\\screenshot.png\", [System.Drawing.Imaging.ImageFormat]::Png\\); \"OK: screenshot mentve\" } else { \"SKIP: nincs kep a vagollapon\" })",
+      "PowerShell(& \"C:\\\\Projects\\\\AuthentiQ\\\\scripts\\\\allowed\\\\save-screenshot.ps1\")"
     ]
   }
 }

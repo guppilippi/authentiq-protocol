@@ -57,8 +57,6 @@ scripts/startServers.ps1	dev	Dev szerverek indítója
 scripts/deployServer.ps1	dev	Pi server deploy (pscp + plink, külön ablakban)
 scripts/resetServer.ps1	dev	Pi szerver adat reset (SCP + sudo rm, külön ablakban)
 scripts/reloadNginx.ps1	dev	Pi nginx reload (plink, külön ablakban)
-scripts/allowed/save-screenshot.ps1	dev	Clipboard kép → AI-ctx/runtime/screenshot.png (Claude futtatja)
-scripts/allowed/set-title.ps1	dev	Mód váltáskor /rename AQ | <mód> vágólapra másolja (Claude futtatja)
 demo/html/index.html	demo	Host page — dev tesztelési belépőpont (openTokenId path-alapú)
 demo/gate-test/config.json	demo	Kapu DAO config (gate neve: "aq", tokenId=1)
 demo/gate-test/logo.png	demo	AuthentiQ logó (PNG, aq:// sémán keresztül töltődik be)

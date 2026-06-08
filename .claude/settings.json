@@ -1,9 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(.\\scripts\\allowed\\*)",
-      "PowerShell(./scripts/allowed/*)",
-      "PowerShell(wt --window 0 new-tab*)"
+      "PowerShell(wt --window 0 new-tab*)",
+      "PowerShell(Set-Clipboard*)"
     ]
   },
   "hooks": {

@@ -2,3 +2,4 @@ loader/node_modules/
 *.lnk
 desktop.ini
 .tmp.driveupload/
+AI-ctx/runtime/screenshot.png

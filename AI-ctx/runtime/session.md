@@ -216,7 +216,7 @@
 - `AI-ctx/process.md` Mód aktiválás szekció frissítve
 - Watcher zombie processzek leállítva
 
-**Teendő:** $PROFILE frissítése — másolja ki: `scripts/powershell-profile.ps1` → `C:\Users\szoke\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1`
+**Teendő:** nincs — `$PROFILE` nem létezik, title-watcher törölve, nincs mit karbantartani.
 
 ---
 
@@ -231,6 +231,32 @@
 **Létrejött:** `scripts/powershell-profile.ps1` — $PROFILE backup (C:\Users\szoke\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1)
 
 **File catalog + TSV frissítve. Következő session-től aktív.**
+
+---
+
+## 2026-06-08 — SETUP: permission matching debug
+
+**Megállapítás:** `PowerShell(.\scripts\allowed\*)` és `PowerShell(./scripts/allowed/*)` — mindkettő promptol. Valószínű ok: Claude Code abszolút pathhoz matchel. Fix: `PowerShell(C:\\Projects\\AuthentiQ\\scripts\\allowed\\*)` hozzáadva settings.json-ba.
+
+**Mellék:** `set-title.ps1`-t Bash toolból hívtam → promptolt (Bash nem matcheli a PowerShell permissiont). Mindig PowerShell toolból kell hívni.
+
+**$PROFILE teendő törölve** — mindkét fájl hiányzik (title-watcher törölve, $PROFILE sosem jött létre).
+
+**Tesztelendő következő sessionben:** abszolút path pattern működik-e prompt nélkül.
+
+---
+
+## 2026-06-08 — SETUP: Set-Clipboard permission fix + set-title.ps1 törlés
+
+**Megállapítás:** Script path-alapú PowerShell permission (relatív backslash, relatív forward slash, abszolút path) — egyik sem matchelt. `Set-Clipboard*` pattern működik, `|` a command stringben nem tört el (teszt: prompt nélkül futott).
+
+**Fix:**
+- `set-title.ps1` törölve
+- `process.md` Mód aktiválás: `Set-Clipboard -Value "/rename AQ | <mód>"` inline hívás
+- `settings.json`: `PowerShell(Set-Clipboard*)` hozzáadva
+- `file_catalog.md` + `.tsv` frissítve
+
+**Nyitott:** `save-screenshot.ps1` permission még teszteletlen — path pattern valószínűleg nem fog működni, ugyanaz a probléma.
 
 ---
 
@@ -250,7 +276,27 @@
 - `wt --window 0 new-tab*` permission megmarad: új tab nyitáshoz kell
 
 **Nyitott:**
-- `save-screenshot.ps1` permission tesztelendő új sessionben (forward slash fix után)
+- `save-screenshot.ps1` permission tesztelendő új sessionben — abszolút path pattern hozzáadva: `PowerShell(C:\\Projects\\AuthentiQ\\scripts\\allowed\\*)`; relatív (backslash + forward slash) mindkettő promptolt
+
+---
+
+## 2026-06-08 — SETUP: permission rendszer feltérképezés + screenshot fix
+
+**Megállapítások:**
+- `PowerShell(pattern)` permission: `*` regex quantifier (nem glob) — `Add-Type*` = `Add-Typ` + nulla vagy több `e`; prefix matchhez NEM alkalmas
+- Path-alapú pattern (`C:\\Projects\\...\\*`) sem működik — backslash regex escape probléma
+- "Don't ask again" → `settings.local.json` (gitignore-ba kerül) exact regex-escaped command patternt ír
+- `wt --window 0 new-tab*` és `Set-Clipboard*` véletlenszerűen "működik" mert az utolsó char repeated prefix esetén matchel
+- `-EncodedCommand ([Convert]::...)` zárójel a commandban törte a permission matchert — fix: `-Command "claude <mód>"`
+
+**Elvégzett:**
+- `setup/process.md`: wt parancs → `-Command "claude <mód>"` (nem -EncodedCommand)
+- `settings.json`: path-alapú pattern-ek eltávolítva; csak `wt --window 0 new-tab*` + `Set-Clipboard*` marad
+- `.gitignore`: `settings.local.json` hozzáadva
+- `settings.local.json` (local, nem gitelt): exact screenshot + Write/Edit AI-ctx/runtime/* permission
+- Screenshot workflow: promptmentes — `& "C:\Projects\AuthentiQ\scripts\allowed\save-screenshot.ps1"` exact pattern
+- Memory frissítve: script workflow (inline kísérlet elvetve, Claude a scriptet preferálja)
+- `set-title.ps1` törölve (working tree), `file_catalog` frissítve
 
 ---
 
