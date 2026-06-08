@@ -456,3 +456,10 @@
 **F02 🟡 javítva (doc):** Guide §5 + §5.3: `loadDaoConfig` → `loadContentDao` (3 előfordulás; függvény 2026-06-08-án törölve, doc stale maradt).
 **F03 🟡 javítva (doc):** Guide §5.2 pont 1: `aqGateDAOName` olvasott mező dokumentálva (`meta` mező; `protocolStorage.put("aqGateDAOName", { meta: "<gateName>" })`).
 **F04 🟢 javítva (doc):** Plan §14.6 gate API seed lista: `unlock`, `activate` hozzáadva.
+
+## 2026-06-08 — DOCSYNC: AQ_WEB2_Server_Guide.md leválasztás
+
+**Elvégzett:**
+- `docs/AQ_WEB2_Server_Guide.md` létrehozva: Guide §12 + §13 tartalma (WEB2 lokális dev szerver + AQS write szerver)
+- Guide §12–13 helyén: utalás az új fájlra
+- `file_catalog.md`: új `doc` bejegyzés
