@@ -350,6 +350,18 @@
 
 **Commit:** 4513336 — push: main
 
+## 2026-06-08 — SETUP: AUDIT subagent flow rögzítve
+
+**Elvégzett:**
+- `audit/process.md` átírva: session indítás típus kérdéssel (full/targeted/gyors), full audit → subagent flow
+- Betöltés: main chat nem olvassa docs/src-t — subagent dolga (auto-compact megelőzés)
+- Subagent prompt template: `ultrathink` kulcsszó (extended thinking), Opus 4.8, findings lista vissza
+- Tárgyalási fázis (Sonnet): pontról pontra marad, diffs végén egyszerre
+
+**Mechanizmus:** `ultrathink` a user jóváhagyó üzenetében (`ok ultrathink`) aktivál extended thinking-et a parent Claude spawn turn-jén. Subagent: Opus 4.8 (`model: "opus"`) — ez a fő minőségi előny. Shortcut: "full audit ultrathink opus 4.8" egyben → azonnal spawn.
+
+---
+
 ## 2026-06-08 — AUDIT: full sweep #2 (4 finding, javítva)
 
 **F01 🟡 javítva (kód):** `aqHostMenu.js:369` Clear IndexedDB fallback: `"aqStorage"` → `"aqProtocol"` (tényleges IDB DB neve).
