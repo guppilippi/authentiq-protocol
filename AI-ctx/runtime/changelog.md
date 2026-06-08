@@ -4,6 +4,14 @@ Kérésre olvasandó. Automatikusan nem töltődik be.
 
 ---
 
+## 2026-06-08 — DOCSYNC: AQ_WEB2_Server_Guide.md létrehozva
+
+- Guide §12–13 tartalma → `docs/AQ_WEB2_Server_Guide.md` (§1 dev szerver, §2 write szerver)
+- Guide §12–13 helyén: pointer az új fájlra
+- Guide preamble: §12/§13 hivatkozások → linkes referencia
+- `file_catalog.md`: új `doc` bejegyzés
+- `state.md`: Elvégzendő szekció törölve
+
 ## 2026-06-08 — AUDIT: Guide §16.2/§13.3/§18/§19.3, Plan §1.4/§19.3, DocRules §8
 
 - §16.2: aqSeedGenComplete flow — session check + teardownGateDao ág dokumentálva

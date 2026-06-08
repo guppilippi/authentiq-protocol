@@ -29,6 +29,7 @@
 | docs/AQ_Glossary.md | doc | Terminológia szómagyarázat |
 | docs/PageNFT.sol | doc | aqProtocol ERC721 Solidity contract (PageNFT) |
 | docs/AQ_Documentation_Rules.md | doc | Doksi szabálykészlet |
+| docs/AQ_WEB2_Server_Guide.md | doc | WEB2 réteg referencia: lokális dev szerver (§1) + write szerver AQS (§2) |
 | loader/src/aqBoot.js | src | Boot entry point (protokoll config → loader betöltés) |
 | loader/src/aqProtocolLoader.js | src | Loader entry point (kapu DAO választás + boot) |
 | loader/src/aqLoaderCore.js | src | DAO és page betöltési orchestráció |
