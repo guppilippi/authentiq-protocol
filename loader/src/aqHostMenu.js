@@ -366,7 +366,7 @@ export function initHostMenu() {
 			dialog.querySelector("#aq-hm-run").addEventListener("click", async () => {
 				try {
 					const dbs = await indexedDB.databases?.() ??
-						[{ name: "aqSeed" }, { name: "aqSession" }, { name: "aqStorage" }];
+						[{ name: "aqSeed" }, { name: "aqSession" }, { name: "aqProtocol" }];
 					await Promise.all(dbs.map(({ name }) =>
 						new Promise((res, rej) => {
 							const r = indexedDB.deleteDatabase(name);

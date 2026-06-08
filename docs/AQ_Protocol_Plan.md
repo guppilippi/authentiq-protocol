@@ -604,7 +604,7 @@ Hard fail, ha a kiválasztott név nem létezik a `gates`-ben.
 
 **Implementált gate API** (`window.aqGateApi`):
 - `protocolStorage.*` (put/get/delete/list/rename) — a `_protocol` namespace eléréséhez.
-- `seed.*` (store, exists) — seed store műveletek.
+- `seed.*` (store, exists, unlock, activate) — seed store műveletek.
 
 A postMessage `aq.gate.*` capability-k **eltávolítva**. Tartalmi DAO sosem fér hozzá a `_protocol` namespace-hez.
 

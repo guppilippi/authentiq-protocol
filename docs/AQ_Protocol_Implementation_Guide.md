@@ -194,7 +194,7 @@ Ez garantálja a determinisztikus indulást.
 
 ## 5. Root Object, protokoll config és DAO config (aktuális forma)
 
-A loader mindig egy DAO configot tölt be (sima DAO: `loadDaoConfig`, kapu DAO: `loadGateDao`). Mindkét út közös belső `_loadDaoConfigInternal`-en delegál.
+A loader mindig egy DAO configot tölt be (sima DAO: `loadContentDao`, kapu DAO: `loadGateDao`). Mindkét út közös belső `_loadDaoConfigInternal`-en delegál.
 
 A DAO config:
 - `refs` (opcionális, 2-szintű) — lásd §5.1
@@ -205,7 +205,7 @@ A DAO config:
 
 A séma **implementációfüggő** és csak a referencia loaderre érvényes.
 
-A `loadDaoConfig` a betöltött configot szigorúan validálja (`validateDaoConfig`); hibás séma esetén a betöltés hard fail-lel megáll, a page-betöltés meg sem indul.
+A `loadContentDao` a betöltött configot szigorúan validálja (`validateDaoConfig`); hibás séma esetén a betöltés hard fail-lel megáll, a page-betöltés meg sem indul.
 
 ### 5.1. DAO config validáció
 
@@ -235,7 +235,7 @@ Protokoll config struktúra:
 A protokoll config **nem validált** runtime-ban.
 
 **Kapu DAO választás precedencia** (a loader végzi):
-1. `aqProtocolStorageGet("aqGateDAOName")` — a `_protocol` namespace IndexedDB-ben tárolt érték
+1. `aqProtocolStorageGet("aqGateDAOName")` — a `_protocol` namespace IndexedDB-ben tárolt érték (`meta` mező; kapu DAO `protocolStorage.put("aqGateDAOName", { meta: "<gateName>" })`-val írja)
 2. `conf.aqGateDAOName` — host conf override
 3. első `gates` kulcs (insertion order)
 
@@ -254,7 +254,7 @@ A `loadGateDao(gateName, gateEntry, pageKey?)` flow:
 4. **API expose:** `exposeGateApi()` — `window.aqGateApi` közzététele (lásd §5.4).
 5. **Renderelés:** `renderGateDao(gateAssets)` — host-szintű DOM injekció, `window.aqGateInit()` meghívása (lásd §5.4).
 
-A `loadDaoConfig` (tartalmi DAO) és a `loadGateDao` a config-betöltési lépésben közös belső függvényre delegál (`_loadDaoConfigInternal`).
+A `loadContentDao` (tartalmi DAO) és a `loadGateDao` a config-betöltési lépésben közös belső függvényre delegál (`_loadDaoConfigInternal`).
 
 ---
 

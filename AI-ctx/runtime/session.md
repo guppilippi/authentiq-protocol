@@ -349,3 +349,10 @@
 **Mellékesen:** Guide §19.3 kód snippetek → prose (új szabály: kód tilos projekt-doksiban → Documentation Rules §8)
 
 **Commit:** 4513336 — push: main
+
+## 2026-06-08 — AUDIT: full sweep #2 (4 finding, javítva)
+
+**F01 🟡 javítva (kód):** `aqHostMenu.js:369` Clear IndexedDB fallback: `"aqStorage"` → `"aqProtocol"` (tényleges IDB DB neve).
+**F02 🟡 javítva (doc):** Guide §5 + §5.3: `loadDaoConfig` → `loadContentDao` (3 előfordulás; függvény 2026-06-08-án törölve, doc stale maradt).
+**F03 🟡 javítva (doc):** Guide §5.2 pont 1: `aqGateDAOName` olvasott mező dokumentálva (`meta` mező; `protocolStorage.put("aqGateDAOName", { meta: "<gateName>" })`).
+**F04 🟢 javítva (doc):** Plan §14.6 gate API seed lista: `unlock`, `activate` hozzáadva.
