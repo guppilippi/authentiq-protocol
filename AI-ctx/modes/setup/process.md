@@ -15,14 +15,12 @@ AI workflow karbantartás: AI-ctx struktúra, CLAUDE.md, hookök, permissions, s
 
 ## Tab / session kezelés
 
-- Claude nyitja az új tabot kérésre (encoded command a quoting miatt):
+- Claude nyitja az új tabot kérésre — **egysoros** parancs (a permission pattern matcheli):
   ```powershell
-  $cmd = 'claude "<mód>"'
-  $enc = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd))
-  wt --window 0 new-tab --profile "AQ Claude" --title "AQ | <mód>" powershell -EncodedCommand $enc
+  wt --window 0 new-tab --profile "AQ Claude" --title "AQ | <mód>" powershell -EncodedCommand ([Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes('claude "<mód>"')))
   ```
 - `--window 0` kötelező — nélküle új ablakban nyílik
-- `--profile "AQ Claude"` — suppressApplicationTitle:true profil, title rögzített marad
+- `--profile "AQ Claude"` — `suppressApplicationTitle: false`, escape sequence-ek működnek
 - `claude "<mód>"` interaktív sessiont indít a mód nevével mint első üzenet
 - Session marker: `runtime/sessions/<mód>.pid` — duplikáció detektáláshoz
 

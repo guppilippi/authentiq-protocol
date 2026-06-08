@@ -190,6 +190,68 @@
 
 **File catalog + TSV frissítve, process.md Mód aktiválás szekció frissítve**
 
+## 2026-06-07 — SETUP: permission fix + wt new-tab
+
+**Megállapítások:**
+- `suppressApplicationTitle` a WT "AQ Claude" profilban `false` (process.md téves volt: `true`-ként dokumentálta)
+- `PowerShell(.\\scripts\\allowed\\*)` pattern jó — `*` matchel szóközt és argumentumokat is; `*.*` nem szükséges
+- `wt --window 0 new-tab ...` nem volt az allowed listában → mindig promtolt
+- A `$enc = ...; wt ...` kétsoros forma nem matcheli a `wt --window 0 new-tab*` prefixet
+
+**Fix:**
+- `settings.json`: `PowerShell(wt --window 0 new-tab*)` hozzáadva az allow listához
+- `setup/process.md`: egysoros `wt` parancs (inline encoding), `suppressApplicationTitle` komment javítva
+
+**Tesztelendő új sessionben:** `set-title.ps1` és `wt new-tab` prompt nélkül fut-e.
+
+## 2026-06-07 — SETUP: suppressApplicationTitle + watcher eltávolítás
+
+**Root cause:** `suppressApplicationTitle: false` → Claude Code TUI felülírta a SetConsoleTitle / OSC title változtatásokat. Watcher + set-title.ps1 soha nem működhetett.
+
+**Fix:**
+- WT settings: `suppressApplicationTitle: true` az "AQ Claude" profilban — Claude nem változtathatja a tab title-t
+- `wt new-tab --title "AQ | <mód>"` továbbra is működik (WT-szintű, nem app-szintű)
+- `scripts/title-watcher.ps1` és `scripts/allowed/set-title.ps1` törölve
+- `scripts/powershell-profile.ps1` lecsupaszítva (csak comment marad)
+- `AI-ctx/process.md` Mód aktiválás szekció frissítve
+- Watcher zombie processzek leállítva
+
+**Teendő:** $PROFILE frissítése — másolja ki: `scripts/powershell-profile.ps1` → `C:\Users\szoke\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1`
+
+---
+
+## 2026-06-07 — SETUP: title-watcher fix (subprocess)
+
+**Root cause:** `Register-ObjectEvent` events nem tüzelnek amíg `claude` process blokkolja a PS main thread-et. Title csak Claude kilépése után változott (sorban lévő eventek lefutnak).
+
+**Fix:**
+- `title-watcher.ps1` rewrite: `WaitForChanged` loop, `[Console]::Write` közvetlenül a main threadből — nincs subprocess spawn
+- `$PROFILE` változás: dot-source → `Start-Process` (`UseShellExecute=$false`, örökli PTY-t), önálló event loop
+
+**Létrejött:** `scripts/powershell-profile.ps1` — $PROFILE backup (C:\Users\szoke\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1)
+
+**File catalog + TSV frissítve. Következő session-től aktív.**
+
+---
+
+## 2026-06-08 — SETUP: session title workflow + permission fix
+
+**Elvégzett:**
+- `scripts/allowed/set-title.ps1`: `/rename AQ | <mód>` vágólapra — Claude session indításkor meghívja, user Ctrl+V + Enter
+- `AI-ctx/process.md` Mód aktiválás szekció frissítve: `set-title.ps1` + `[title] Ctrl+V + Enter`
+- `settings.json` permission fix: `PowerShell(./scripts/allowed/*)` forward slash variant hozzáadva (backslash pattern nem illeszkedett régebbi fájlokra)
+- `/rename` = státuszsor + WT tab title egyszerre; `/color` csak in-memory
+- File catalog + TSV: `set-title.ps1` felvéve
+
+**Megállapítások:**
+- `/rename` és `/color`: user-invokált slash command, Claude nem hívhatja; státuszsor name session JSON-ban van, de nem live (IPC-n frissül, nem fájlírással)
+- Prompt suggestion mechanizmus: nem megbízható, nem építünk rá
+- `set-title.ps1` implicit trusted volt (ebben a sessionben írva) → `save-screenshot.ps1` prompolt (régebbi fájl)
+- `wt --window 0 new-tab*` permission megmarad: új tab nyitáshoz kell
+
+**Nyitott:**
+- `save-screenshot.ps1` permission tesztelendő új sessionben (forward slash fix után)
+
 ---
 
 ## 2026-06-06 — PLAN: iframe origin, PWA bootstrap, IPFS gateway
