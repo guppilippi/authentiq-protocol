@@ -1,6 +1,6 @@
 // aqHostMenu.js
 // Host-szintű hamburger menü. Mindig aktív.
-// devMode: Wallet + Publish Gate + Refresh Protocol
+// devMode: Wallet + Publish aqBoot.js + Publish Protocol + Publish Gate + Clear IndexedDB
 // Production: Wallet + Fork DAO
 
 import { devMode } from "./aqEnv.js";
@@ -95,8 +95,8 @@ async function processPathRefs(serverUrl, wallet, config) {
 		}
 	}
 
-	// Boot + loader path → CID
-	for (const field of ["boot", "loader"]) {
+	// Loader path → CID
+	for (const field of ["loader"]) {
 		if (result[field]?.path) {
 			overlaySetLabel(`Uploading ${field}…`);
 			const resp = await fetch(result[field].path, { cache: "no-store" });

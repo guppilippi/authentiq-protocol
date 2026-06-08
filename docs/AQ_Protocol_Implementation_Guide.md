@@ -13,6 +13,8 @@ Ha egy elem kikerül a kódból, **innen is kikerül**.
 
 **Megjegyzés a jelen állapothoz**: a jelenleg működő és dokumentált referencia a build-elt `aqBoot.js` és `aqProtocolLoader.js` IIFE bundle (forrásmodulok a `loader/src/` mappában, esbuild pipeline; lásd §1.2). A WEB2 lokális dev szerver (read-only) is része a referencia implementációnak (lásd §12). A WEB2 write szerver (`aqServer.js`) szintén működő referencia implementáció (lásd §13). Minden más (fork mechanizmus, watcher, PWA, cross-device flow) **terv**, és a Plan dokumentumba tartozik, nem ide.
 
+**Implementált rétegek**: Localhost (path-alapú devMode) és WEB2. Az IndexedDB-rétegű DAO betöltés (DAO config IndexedDB-ből) és a WEB3-réteg **tervezett, jelenleg nem implementált** — a loader csak path vagy CID alapján tölt be DAO configot.
+
 ---
 
 ## 1. Dokumentum szerepe
@@ -90,6 +92,8 @@ Referencia (explicit) Swarm gateway alap:
 
 A `resolveDaoCid(tokenId, urls)` paraméteres szignatúrával hívódik mindkét bundle-ben. Az URL-lista a `parseRpcConfig` eredménye.
 
+**Szekvenciális failover**: `resolveDaoCid` multi-URL esetén sorban próbálja az URL-eket; ha egy URL tranziens hibát ad, a következőre lép. A default Gnosis lista 3 elemű — ez 3-lépéses szekvenciális failovert biztosít. (Tervezett jövőbeli fejlesztés: párhuzamos / hedged requests — lásd Plan.)
+
 **cidBase–rpc biztonsági kötés** (non-devMode): az `aqCidBaseConfig.js` (`checkCidBaseSecurity`) szinkron ellenőrzést végez a boot és a loader induláskor.
 - Single RPC URL esetén: `origin(rpc) === origin(cidBase)` → OK (strict web2), VAGY `cidBase` az ismert Swarm gateway-listában → OK.
 - Multi RPC (default Gnosis lista) esetén: `cidBase` az ismert listában kötelező.
@@ -161,8 +165,9 @@ A boot flow lépései:
 5. **Loader bundle fetch**: cache policy szerint (path → `no-store`, CID → `force-cache`).
 6. **HTML-detection**: a bytes első 384 byte-ja UTF-8 dekódolva ellenőrzött; ha `<!doctype|html|head|body>` mintát tartalmaz, hard fail.
 7. **Globalbe ír**: `window.aqProtocolConfig = <parsed-protocol-config>` (a loader olvassa).
-8. **Conf freeze + DOM hygiene**: `Object.freeze(conf)` és `Object.freeze(protocolCfg)`. Az `AQ_CONF` script tag és a saját boot script tag eltávolítva.
-9. **Loader script injekció** blob URL-ről.
+8. **Blob URL + script elem előkészítése**: a loader bytes-ból blob URL létrehozása és `<script>` elem konfigurálása (`src`, `async`, event handlerek).
+9. **Conf freeze + DOM hygiene**: `Object.freeze(conf)` és `Object.freeze(protocolCfg)`. Az `AQ_CONF` script tag és a saját boot script tag eltávolítva.
+10. **Loader script injekció** (`appendChild`) — a script ettől a ponttól fut; a freeze a futás előtt megtörténik.
 
 - bootstrap gate: nem-localhost origin esetén path-alapú loader hivatkozás (`loader.path`) **tiltott** (defense-in-depth: a `validateLocalRef` az `aqBoot.js`-ben non-devMode-ban dobja a path-ágat).
 - Env guard: a `top !== self` és `hostOrigin !== "null"` ellenőrzés mindkét bundle-ben (boot és loader) lefut.
@@ -460,7 +465,7 @@ A protokoll DAO-scope-olt text storage capability-t biztosít IndexedDB alapon, 
 #### Scope
 
 - Storage namespace = az aktuális DAO-hoz beállított `aqDaoNamespace` érték.
-  - Sima DAO esetén: `"tokenId:" + tokenId`. Stabil a tartalom-frissítések alatt.
+  - Sima DAO esetén: `"tokenId:" + tokenId` (production). DevMode path-ágban: a nyers path maga (pl. `/demo/json/aqDaoConfig.json`). Stabil a tartalom-frissítések alatt.
   - Kapu DAO esetén: `"gate:" + tokenId` (production) vagy `"gate:" + path` (devMode). Stabil a tartalom-frissítések alatt.
 - DAO váltás más namespace-re vált.
 - Azonos namespace-re visszatérés az adatokat változatlanul elérhetővé teszi.
@@ -634,7 +639,7 @@ RPC    (magenta) — node .\server\rpcServer.js
 
 ### 12.5. RPC szerver (`/rpc`)
 
-- `POST` only, egyéb method → 405 vagy 404. `OPTIONS` → 204 (CORS preflight válasz).
+- `POST` only, egyéb method → 404 (JSON-RPC `-32601`). `OPTIONS` → 204 (CORS preflight válasz). (A `cidServer.js` ezzel szemben 405-öt ad nem-GET-re.)
 - Body validáció: JSON, `method === "eth_call"`, `params[0]` objektum.
 - `params[0].to` ellenőrzése: az aqProtocol DAO contract cím (`0x64521be8...`).
 - `params[0].data` ellenőrzése: kezdődik a `0xcc2fb628` (selector = `getSwarmHash(uint256)`) prefix-szel + 64 hex (uint256 tokenId).
@@ -700,7 +705,7 @@ Példa: `["0x4fe481e8df86f415ffd5476ce6cfc15439234077"]`
 - Válasz: `{ cid: "<64-hex>" }`.
 
 **`GET /cid/<hash>`** — asset olvasás
-- CID formátum: `/^[0-9a-f]{64}$/i`.
+- CID formátum: `/^[0-9a-f]{64}$/i` — ez implicit path traversal védelmet biztosít (a regex kizárja a `/` és `..` karaktereket).
 - Symlink-en keresztül olvas a `data/blobs/` mappából.
 - Válasz: `application/octet-stream`, `Cache-Control: immutable`.
 
@@ -709,15 +714,19 @@ Példa: `["0x4fe481e8df86f415ffd5476ce6cfc15439234077"]`
 | Metódus | Leírás |
 |---|---|
 | `eth_call` | TokenId → CID feloldás (read-only, auth nélkül) |
-| `aqMintToken` | Új token allokálás; auto-incrementáló, 100-tól indul (0–99 rezervált) |
+| `aqMintToken` | Új token allokálás; 100-tól indul (0–99 rezervált, lásd §13.4) |
 | `aqSetSwarmHash` | TokenId → CID beállítás (owner ellenőrzés) |
 
 ### 13.4. TokenId ownership
 
 - `data/ownership.json`: `{ "<tokenId>": "<wallet>" }` map.
-- `aqMintToken`: új tokenId auto-inkrementálva (0 kihagyva), a hívó wallet lesz az owner.
+- `aqMintToken`: következő tokenId = `max(létező ≥100-as tokens/ fájlok) + 1`; ha nincs ilyen fájl, 100. Fájlrendszer-listázás alapú (nem ownership-lista). Az allokált tokenId-re a hívó wallet azonnal ownership bejegyzést kap.
 - `aqSetSwarmHash`: csak az owner írhat a tokenId-re.
-- **Auto-claim**: bármely tokenId esetén, ha még nincs ownership bejegyzés, az első whitelisted writer automatikusan megkapja az ownershipet. (TokenId=0 a protokoll config tokenje — `aqMintToken` soha nem allokálja.)
+- **Auto-claim**: bármely tokenId esetén (0-tól felfelé), ha még nincs ownership bejegyzés, az első whitelisted writer automatikusan megkapja az ownershipet. Ez a tokenId=0 (protokoll config) és az 1–99 rendszer-tartomány esetén is érvényes — a védelmi vonal kizárólag a whitelist szűksége (WEB2). WEB3 flow-ban az on-chain ownership mechanizmus adja a védelmet.
+- **TokenId-tartomány** (konvenció):
+  - `0` — protokoll config; `aqMintToken` soha nem allokálja
+  - `1–99` — protokoll, gate DAO-k, rendszer; a genesis admin explicit írja (auto-claim whitelist-védelemmel)
+  - `100+` — sima DAO-k (`aqMintToken` ebből allokál)
 
 ### 13.5. Deploy (referencia)
 
@@ -881,6 +890,8 @@ Függőség: `ethers ^6.0.0` (`loader/package.json` dependencies).
 - **sticky**: első használatkor véletlenszerű index a range-ben, majd IndexedDB-ben eltárolódik.
 - **oneshot**: minden operációnál `start + counter` (aktuális counter értékkel), majd `counter++` perzisztál IndexedDB-ben.
 
+**Megjegyzés**: a `gateWriter` és `mintOp` wallet-szerepek WEB3 flow-hoz tervezett megkülönböztetés. Jelenleg a referencia publish flow-k (Publish Gate, Publish Protocol, Fork DAO) kizárólag a `web2Devel` (index 1000) wallet-et használják (`fromRawSeed(seedGetRaw(), 1000)`). A `getWallet` / `gateWriter` / `mintOp` infrastruktúra WEB3 átállásnál aktiválódik.
+
 ### 17.3. Wallet store
 
 **`getWallet(key, seedInput)`** → `{ address, sign }`
@@ -908,7 +919,7 @@ IndexedDB kulcsformátum: `wallet.<key>` a `_protocol` namespace-ben.
 
 ## 18. Host hamburger menü (`aqHostMenu.js`)
 
-Mindig aktív — devMode és production egyaránt. Az `aqProtocolLoader.js` hívja `initHostMenu()`-t a boot flow végén (tartalmi DAO betöltése után, ha van).
+Mindig aktív — devMode és production egyaránt. Az `aqProtocolLoader.js` a `finally` blokkban hívja `initHostMenu()`-t — mindig, a tartalmi DAO betöltés sikerétől függetlenül (seed unlock után a menü mindig megjelenik).
 
 ### 18.1. UI struktúra
 
@@ -980,7 +991,7 @@ Minden módban aktív. `getWalletAddresses()` (`aqKeyring.js`) fut — seed unlo
 
 ### 18.8. processPathRefs (belső)
 
-`processPathRefs(serverUrl, wallet, config)` — a config másolatában minden `refs[cat][sub][name].path` ref → upload → `{cid, description}`. A `boot.path` és `loader.path` is feltöltődik ha jelen van. Közös belső segítő a publish műveletek számára.
+`processPathRefs(serverUrl, wallet, config)` — a config másolatában minden `refs[cat][sub][name].path` ref → upload → `{cid, description}`. A `loader.path` is feltöltődik ha jelen van (protokoll config publish esetén). Közös belső segítő a publish műveletek számára.
 
 ---
 
@@ -1022,7 +1033,7 @@ Logout = teljes IndexedDB törlés (§18.7 Clear IndexedDB).
 - Session aktív, devMode: `loadGateCfgOnly` hívódik render nélkül (Publish Gate előfeltétele).
 - Session aktív, production: gate kihagyva.
 
-Ezután ha `openTokenId` set: `loadContentDao`, majd `initHostMenu()`.
+Ezután ha `openTokenId` set: `loadContentDao`. Mindkét ágban: `initHostMenu()` a `finally` blokkban fut — betöltési hiba esetén is megjelenik.
 
 `aqSeedGenComplete` callback (seed-gen utáni ág):
 
@@ -1030,7 +1041,7 @@ Session check (`isSeedUnlocked() || sessionLoad()`). Két eset:
 - Session aktív: `teardownGateDao()` (seed-gen UI DOM-ból eltávolítva).
 - Session nem aktív: `renderGatePage()` (kapu DAO `defaultPage`, auth prompt).
 
-Ezután ha `openTokenId` set: `loadContentDao`, majd `initHostMenu()`.
+Ezután ha `openTokenId` set: `loadContentDao`. `initHostMenu()` a `finally` blokkban fut — betöltési hiba esetén is megjelenik.
 
 ### 19.4. Gate teardown (`teardownGateDao`)
 
@@ -1050,7 +1061,7 @@ A kapu DAO HTML asset-jeiben `aq://` sémájú hivatkozások blob URL-re cserél
 Feldolgozás (`preprocessAqRefs`, `aqLoaderCore.js`):
 1. Regex-match: `/aq:\/\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)/g`
 2. `resolveRefIn(gateCfg, category, sub, name)` → `fetchAssetBytes` → `URL.createObjectURL`.
-3. MIME: path kiterjesztésből (`png/jpg/jpeg/svg/webp/gif`). CID ref default: `image/png`.
+3. MIME: path kiterjesztésből (`png/jpg/jpeg/svg/webp/gif`). CID ref default: `image/png` (nincs `path` → mindig `image/png`). Korlát: SVG, WebP és más formátumok CID refként rossz MIME-mel kerülnek blob URL-re. Tervezett megoldás: `type` mező a ref sémában vagy DAO-oldali kategória-alapú deriválás — döntés a ref-séma tervezésekor.
 4. Blob URL-ek `_imageBlobUrls` tracking; `teardownGateDao()` revoke-olja.
 
 Csak gate DAO HTML-ben aktív. Tartalmi DAO (iframe) nem kap aq:// feldolgozást.
@@ -1066,3 +1077,4 @@ Csak gate DAO HTML-ben aktív. Tartalmi DAO (iframe) nem kap aq:// feldolgozást
 - Gate DAO referencia tokenId: `"1"`.
 - DevMode-ban: gate entry `path` + `tokenId` párhuzamosan jelen lehet; namespace a `tokenId`-re épül (stabil).
 - Production-ban: csak `tokenId`.
+- Az 1–99 tartomány kód-szinten nem védett — a genesis admin írja a tokenId-ket explicit auto-claimmel; a védelmi vonal a whitelist szűksége (WEB2). WEB3-on on-chain ownership biztosítja a védelmet.

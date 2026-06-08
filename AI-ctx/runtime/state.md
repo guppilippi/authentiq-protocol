@@ -79,7 +79,7 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 - `preprocessAqRefs(html)`: `aq://category/sub.name` → `resolveRefIn(gateCfg)` → `fetchAssetBytes` → blob URL
 - `_imageBlobUrls` tracking; teardownGateDao revoke-olja
 - Formátum: `aq://img/dao.logo` → `refs.img.dao.logo` → `{ path: "..." }`
-- MIME detektálás path kiterjesztésből; CID ref esetén `image/png` default
+- MIME detektálás path kiterjesztésből; CID ref esetén `image/png` default (korlát: SVG/WebP/egyéb rossz MIME-mel — tervezett: `type` mező a ref sémában vagy kategória-alapú deriválás, döntés WEB3 tervezéskor)
 
 ### Gate DAO flow
 
@@ -108,7 +108,7 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 ### Fork/publish flow (kész)
 
 - `getGateCfg()`, `getDaoCfg()` exportok elérhetők
-- `processPathRefs()`: path ref → upload → CID; kezeli: `boot`, `loader`, `refs.*` mezőket
+- `processPathRefs()`: path ref → upload → CID; kezeli: `loader`, `refs.*` mezőket (`boot` ág törölve — halott kód volt)
 - `loadGateCfgOnly()`: gate config betölt renderelés nélkül — devMode + session aktív esetén (Publish Gate előfeltétele)
 - devMode: Publish aqBoot.js (CID vágólapra), Publish Protocol (protokol config, gate `path` eltávolítva), Publish Gate (gate config), Clear IndexedDB
 - prod: Fork DAO (tartalom DAO → CID → tokenId: üres = új 100+, vagy meglévő ha wallet=owner)
@@ -166,6 +166,11 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 - Nincs production környezet, nincs prod-kompatibilitási elvárás
 
 ---
+
+## Tervezett refaktorok (következő DEVp)
+
+- **Ref feloldási pipeline egységesítés**: `aqLoaderCore.js` inline path/tokenId/CID elágazások → `classifyRef`-alapú pipeline (`aqAssetRef.js` előkészített függvényekkel). WEB3 flow előtt elvégzendő.
+- **Ref `type` mező**: MIME tárolás a ref sémában — nyitott tervezési kérdés (explicit `type` vs kategória-alapú). Döntés WEB3 ref-séma tervezéskor.
 
 ## Ismert javítandók (AI workflow)
 

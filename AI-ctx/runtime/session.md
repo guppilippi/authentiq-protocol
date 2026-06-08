@@ -362,6 +362,42 @@
 
 ---
 
+## 2026-06-08 — AUDIT: full sweep #3 (23 finding — Opus 4.8 subagent)
+
+**Kód változások:**
+- `aqHostMenu.js`: fejléc komment javítva; `processPathRefs` `["boot", "loader"]` → `["loader"]` (`boot` ág halott kód volt)
+- `aqProtocolLoader.js`: fejléc komment javítva; `initHostMenu()` → `finally` blokkba (mindkét ágban) — menü mindig megjelenik betöltési hiba esetén is
+- `aqAssetRef.js`: `validateResolvedRef` komment — `devMode` paraméter tervezett (devMode-ban `{path}` is valid resolved ref)
+
+**Új fájl:** `docs/PageNFT.sol` — ERC721 Solidity contract (`PageNFT`)
+
+**Doc változások (Guide):**
+- §1: implementált rétegek (Localhost + WEB2); IndexedDB + WEB3 tervezett, nem implementált
+- §2.3: szekvenciális RPC failover dokumentálva
+- §4.2: blob URL előkészítés → freeze → `appendChild` sorrend pontosítva (10 lépés)
+- §11.1: sima DAO devMode path-ág namespace = nyers path
+- §12.5: rpcServer csak 404 (nem 405); cidServer 405-öt ad
+- §13.3: `GET /cid/` CID_RE implicit path traversal védelem megemlítve
+- §13.4: auto-claim 0-99+ minden tokenId-re; tokenId-tartomány tábla; whitelist védelmi vonal explicit; WEB3 deferred
+- §17.2: `gateWriter`/`mintOp` WEB3 flow-hoz tervezett, jelenleg nem aktív
+- §18 init: `initHostMenu` finally blokkban; §18.8: `processPathRefs` boot mező törölve
+- §19.3: `initHostMenu` finally ág mindkét boot-ágban
+- §19.5: MIME type korlát + tervezett megoldás (nyitott tervezési kérdés)
+- §19.6: 1–99 whitelist-védett, kód-kényszer nélkül; WEB3 on-chain ownership
+
+**Doc változások (egyéb):**
+- Glossary: `tokenId` bejegyzés — `PageNFT` = contract neve, `aqProtocol DAO contract` = protokoll-szintű név
+- Plan §1/§14.2: `boot.js` → `aqBoot.js`; §16.5: ref pipeline egységesítés + ref `type` mező pending
+- `accepted.txt`: tokenId auto-claim és whitelist-védelem rögzítve
+- `file_catalog.md`: `docs/PageNFT.sol` hozzáadva
+- `state.md`: fork/publish komment + MIME megjegyzés + tervezett refaktorok szekció
+
+**Tárgyalási döntések (nem javított, elfogadott):**
+- F11: `classifyRef`, `getAqRpcUrls`, `validateResolvedRef` — WEB3 infrastruktúra, marad
+- F06: `switchDao(daoConfig)` — `daoConfig` = `{ contract, tokenId }` WEB3-on, naming helyes
+- F15: `gateWriter`/`mintOp` WEB3-hoz tervezett
+- F20: MIME tárolás nyitott tervezési kérdés (type mező vs DAO-oldali tudás)
+
 ## 2026-06-08 — AUDIT: full sweep #2 (4 finding, javítva)
 
 **F01 🟡 javítva (kód):** `aqHostMenu.js:369` Clear IndexedDB fallback: `"aqStorage"` → `"aqProtocol"` (tényleges IDB DB neve).

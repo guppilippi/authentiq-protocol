@@ -3,9 +3,9 @@
 //   1. openTokenId feloldás: ?token URL param → conf.openTokenId → null
 //   2. Kapu DAO választás (precedencia)
 //   3. Seed ellenőrzés
-//      - NINCS: kapu DAO seedGen page renderelés, várakozás
-//      - VAN: kapu DAO defaultPage + tartalmi iframe
-//   4. Seed mentés után átvált defaultPage-re + tartalmi iframe
+//      - NINCS: kapu DAO seedGen page renderelés, várakozás (aqSeedGenComplete callback)
+//      - VAN: session aktív → gate kihagyva (production) / loadGateCfgOnly (devMode); egyébként loadGateDao
+//   4. openTokenId → loadContentDao; initHostMenu mindig fut (finally)
 
 import "./aqEnv.js";
 import { devMode } from "./aqEnv.js";
@@ -66,10 +66,10 @@ window.aqSeedGenComplete = async function aqSeedGenComplete() {
 			await renderGatePage(); // defaultPage
 		}
 		if (openTokenId) await loadContentDao(openTokenId);
-		initHostMenu();
 	} catch (e) {
 		console.error(e);
 	} finally {
+		initHostMenu();
 		setLocked(false);
 		overlayHide();
 	}
@@ -101,10 +101,10 @@ window.aqSeedGenComplete = async function aqSeedGenComplete() {
 				await loadGateCfgOnly(gateEntry);
 			}
 			if (openTokenId) await loadContentDao(openTokenId);
-			initHostMenu();
 		} catch (e) {
 			console.error(e);
 		} finally {
+			initHostMenu();
 			setLocked(false);
 			overlayHide();
 		}

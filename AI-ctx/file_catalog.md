@@ -26,6 +26,7 @@
 | docs/AQ_Protocol_Implementation_Guide.md | doc | Referencia implementáció leírás |
 | docs/AQ_Protocol_Plan.md | doc | Tervek, pending elemek |
 | docs/AQ_Glossary.md | doc | Terminológia szómagyarázat |
+| docs/PageNFT.sol | doc | aqProtocol ERC721 Solidity contract (PageNFT) |
 | docs/AQ_Documentation_Rules.md | doc | Doksi szabálykészlet |
 | loader/src/aqBoot.js | src | Boot entry point (protokoll config → loader betöltés) |
 | loader/src/aqProtocolLoader.js | src | Loader entry point (kapu DAO választás + boot) |

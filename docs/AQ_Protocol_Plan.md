@@ -4,7 +4,7 @@
 Ez a dokumentum **nem normatív**.  
 Az AQ protokoll minden olyan elemét tartalmazza, amely **még nem implementált**, vagy **nem végleges döntés**.
 
-A jelenleg implementált mag: `boot.js` és `aqProtocolLoader.js`. Minden más ebben a dokumentumban tervként szerepel.
+A jelenleg implementált mag: `aqBoot.js` és `aqProtocolLoader.js`. Minden más ebben a dokumentumban tervként szerepel.
 
 ---
 
@@ -539,11 +539,11 @@ A hasznosság csak az átmeneti szakaszra fontos, a hitelesség hosszú távon i
 
 ### 14.2. Kliens oldal
 
-- boot.js és loader IIFE marad (nem ESM, nem modul)
+- `aqBoot.js` és loader IIFE marad (nem ESM, nem modul)
 - Megosztott kód ESM modulként, esbuild bundle IIFE-be a loader számára
 
 **Invariáns**: a forrásmodulok (ESM) **kizárólag fejlesztési artefaktumok**.
-Böngészőben kizárólag a bundle-elt IIFE artefaktumok (`boot.js`, `aqProtocolLoader.js`) futnak.
+Böngészőben kizárólag a bundle-elt IIFE artefaktumok (`aqBoot.js`, `aqProtocolLoader.js`) futnak.
 A két bundle build-időben tartalmazza a saját másolatát a megosztott modulokból;
 runtime-ban nincs köztük state-megosztás, csak forráskód-szintű DRY.
 Modul-szintű állapot (pl. `let`-tel deklarált változó) ennek megfelelően értelmezendő: bundle-onként önálló példány.
@@ -723,6 +723,8 @@ Cache a hívó DAO `cacheable` flag-jétől függ; a hivatkozott DAO-k tartalmá
 
 ### 16.5. Kód- és architektúra-evolúció
 - capability modulok szétválasztása
+- **Ref feloldási pipeline egységesítés**: az `aqLoaderCore.js` inline path/tokenId/CID elágazásait `classifyRef`-alapú egységes pipeline-ra cserélni (`aqAssetRef.js` előkészített függvényeivel). Elvégzendő WEB3 flow tervezése előtt.
+- **Ref `type` mező**: MIME type tárolás a ref sémában — nyitott tervezési kérdés. Két irány: (a) explicit `type` mező a raw config ref + resolved ref szinten; (b) DAO-oldali tudás / kategória-alapú deriválás. Döntés a ref-séma WEB3-os tervezésekor.
 
 ### 16.6. Eszköz capability-k (tervezett)
 
