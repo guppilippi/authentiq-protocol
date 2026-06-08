@@ -14,20 +14,6 @@ const dataRoot = resolveDataRoot(import.meta.url);
 requireDir(dataRoot, "data root");
 await initData(dataRoot);
 
-function readBodyRaw(req, maxBytes = MAX_UPLOAD) {
-	return new Promise((resolve, reject) => {
-		const chunks = [];
-		let total = 0;
-		req.on("data", c => {
-			total += c.length;
-			if (total > maxBytes) { reject(new Error("body too large")); req.destroy(); return; }
-			chunks.push(c);
-		});
-		req.on("end",   () => resolve(Buffer.concat(chunks)));
-		req.on("error", reject);
-	});
-}
-
 function corsHeaders(res) {
 	res.setHeader("Access-Control-Allow-Origin", "*");
 }
@@ -103,7 +89,7 @@ const server = createServer(async (req, res) => {
 			return;
 		}
 		let body;
-		try { body = await readBodyRaw(req); }
+		try { body = await readBody(req, { asBuffer: true, maxBytes: MAX_UPLOAD }); }
 		catch (e) {
 			jsonResp(res, 413, { error: e.message });
 			logRequest(LABEL, method, url, 413, `(${e.message})`);

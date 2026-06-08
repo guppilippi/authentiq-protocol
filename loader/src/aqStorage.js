@@ -10,6 +10,7 @@ export const AQ_PROTOCOL_NS = "_protocol";
 
 export let aqDaoNamespace = "";
 export const setAqDaoNamespace = (ns) => {
+	// Guard: csak 64-hex vagy cid:-prefixű namespace-t zár ki (közvetlen CID-alapú namespace tiltva, storage stabilitási invariáns).
 	if (/^[0-9a-f]{64}$/i.test(ns) || ns.startsWith("cid:"))
 		throw new Error("[AQ] storage namespace cannot be CID-based: " + ns);
 	aqDaoNamespace = ns;

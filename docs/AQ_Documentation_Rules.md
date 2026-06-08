@@ -24,19 +24,19 @@ Ha változik:
 
 ## 2. Concepts – *hogyan kell gondolkodni róla*
 Ide az kerül, ami:
-- segít megérteni a Manifest mögötti logikát,
-- nagyobb technikai rálátást ad,
-- **nem dönt**, csak értelmez.
+- a Manifest elveit kifejti, mélyebb logikát és következményeket ad hozzájuk,
+- a rendszer viselkedését tágabb összefüggésben írja le,
+- **nem fejlesztői referencia** (konkrét API, implementációs instrukció a Guide feladata).
 
 **Megengedett:**
-- absztrakciók,
-- mentális modellek,
-- következmények („ebből az következik…”).
+- absztrakciók, mentális modellek,
+- Manifest-elvek normatív következményei,
+- rendszer-szintű viselkedés leírása (nem API-szinten).
 
 **Tilos:**
-- konkrét API-k,
-- kötelező folyamatleírás,
-- „így kell csinálni” típusú állítások.
+- konkrét API-k, kód-szintű leírás,
+- implementációs instrukciók („így kell csinálni” a kódban),
+- fejlesztői referencia.
 
 ---
 
@@ -84,7 +84,7 @@ Az információ **mindig lefelé mozog**:
   Plan → Implementation Guide → Manifest
                                      |
                                   Concepts
-                             (kibont, nem normatív)
+                             (kibont: Manifest kifejtés + rendszer viselkedés)
 
 ---
 
@@ -95,6 +95,8 @@ Ugyanaz az állítás:
 
 Ha igen:
 - az egyik helyen rossz.
+
+**Kivétel:** ha két dokumentum célközönsége különbözik (pl. Concepts = nem fejlesztői, Guide = fejlesztői), a szükségszerű fedés elfogadható.
 
 ---
 

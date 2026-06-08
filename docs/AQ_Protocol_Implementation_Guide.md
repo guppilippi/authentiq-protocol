@@ -167,7 +167,7 @@ A boot flow lépései:
 7. **Globalbe ír**: `window.aqProtocolConfig = <parsed-protocol-config>` (a loader olvassa).
 8. **Blob URL + script elem előkészítése**: a loader bytes-ból blob URL létrehozása és `<script>` elem konfigurálása (`src`, `async`, event handlerek).
 9. **Conf freeze + DOM hygiene**: `Object.freeze(conf)` és `Object.freeze(protocolCfg)`. Az `AQ_CONF` script tag és a saját boot script tag eltávolítva.
-10. **Loader script injekció** (`appendChild`) — a script ettől a ponttól fut; a freeze a futás előtt megtörténik.
+10. **Loader script injekció** (`appendChild`, cél: `document.head || documentElement`) — a script ettől a ponttól fut; a freeze a futás előtt megtörténik. (A boot script `<body>`-ban fut, DOM ezért kész.)
 
 - bootstrap gate: nem-localhost origin esetén path-alapú loader hivatkozás (`loader.path`) **tiltott** (defense-in-depth: a `validateLocalRef` az `aqBoot.js`-ben non-devMode-ban dobja a path-ágat).
 - Env guard: a `top !== self` és `hostOrigin !== "null"` ellenőrzés mindkét bundle-ben (boot és loader) lefut.
@@ -470,6 +470,7 @@ A protokoll DAO-scope-olt text storage capability-t biztosít IndexedDB alapon, 
 - DAO váltás más namespace-re vált.
 - Azonos namespace-re visszatérés az adatokat változatlanul elérhetővé teszi.
 - A storage modul-szintű állapota (namespace, IndexedDB connection promise) a loader bundle-ben él. Más bundle-be importálva (pl. boot) a state nem osztott — minden bundle saját példányt kap.
+- A namespace nem lehet CID-alapú: 64-hex string vagy `cid:`-prefixű érték esetén `setAqDaoNamespace` hard throw-t ad (storage stabilitási invariáns).
 
 ### 11.2. Protokoll-szintű storage (`_protocol` namespace)
 
@@ -654,13 +655,13 @@ RPC    (magenta) — node .\server\rpcServer.js
 `server/util.js`:
 - `resolveDataRoot(importMetaUrl)` — env override + default lokális path.
 - `requireDir(path, label)` — hard fail induláskor, ha nincs.
-- `readBody(req, maxBytes = 65536)` — POST body olvasás méret-limittel.
+- `readBody(req, { asBuffer?, maxBytes? })` — POST body olvasás; `asBuffer: true` → Buffer, egyébként UTF-8 string; default maxBytes: 64 KB.
 - `logRequest(label, method, url, status, extra)` — egysoros request log.
 - `logStartup(label, port, dataDir)` — induláskor két soros log.
 
 ### 12.7. `server/package.json`
 
-- `type: module`, nulla külső dep
+- `type: module`, minimális külső dep (ethers ^6.0.0 aláírás-ellenőrzéshez)
 - `scripts.cid` és `scripts.rpc` indítók
 
 ### 12.8. Limitációk
@@ -708,6 +709,7 @@ Példa: `["0x4fe481e8df86f415ffd5476ce6cfc15439234077"]`
 - CID formátum: `/^[0-9a-f]{64}$/i` — ez implicit path traversal védelmet biztosít (a regex kizárja a `/` és `..` karaktereket).
 - Symlink-en keresztül olvas a `data/blobs/` mappából.
 - Válasz: `application/octet-stream`, `Cache-Control: immutable`.
+- Nem-GET method → 404 (a CID route nem ad 405-öt, eltérően a read-only `cidServer.js`-től).
 
 **`POST /rpc`** — JSON-RPC write metódusok
 
@@ -808,6 +810,8 @@ Ha `method === "webauthn-prf"`, a `credentialId` mező is kötelező.
 Feltételek:
 - Ha seed már létezik → hiba (nem írható felül).
 - Mentéskor `storedAt: Date.now()` automatikusan hozzáadódik.
+
+Visszatérési érték: `{ stored: true }`.
 
 ### 15.3. Hozzáférési modell
 
@@ -976,7 +980,7 @@ Minden módban aktív. `getWalletAddresses()` (`aqKeyring.js`) fut — seed unlo
 ### 18.6. Fork DAO (production)
 
 **Flow:**
-1. Wallet: `fromRawSeed(seedGetRaw(), 1000)` — address silent clipboard-ra.
+1. Wallet: `fromRawSeed(seedGetRaw(), 1000)` — csak `isPwa || devMode` kontextusban (seed autentikáció szükséges).
 2. DAO config: `getDaoCfg()` → másolat.
 3. `processPathRefs()`: path ref → upload → CID (lásd §18.8).
 4. DAO config feltöltés: `POST <serverUrl>/aq/asset` → CID.
@@ -987,7 +991,7 @@ Minden módban aktív. `getWalletAddresses()` (`aqKeyring.js`) fut — seed unlo
 
 ### 18.7. Clear IndexedDB (devMode)
 
-Összes IndexedDB törlése (`aqSeed`, `aqSession`, `aqStorage`). Visszavonhatatlan. Utána `location.reload()`.
+Összes IndexedDB törlése (`aqSeed`, `aqSession`, `aqProtocol`). Visszavonhatatlan. Utána `location.reload()`.
 
 ### 18.8. processPathRefs (belső)
 

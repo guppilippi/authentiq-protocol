@@ -8,7 +8,17 @@
 
 ---
 
-## Session indítás — típus kérdés
+## Session indítás
+
+**Első lépés:** ellenőrizni, hogy létezik-e `runtime/audit_session.md`.
+- Ha igen → félbemaradt audit; megkérdezni: folytatjuk vagy eldobjuk?
+  - Folytatás: findings már adott, tárgyalási fázis ott indul ahol abbahagytuk
+  - Eldobás: fájl törölve, új audit indul
+- Ha nem → új audit, típus kérdés következik
+
+---
+
+## Típus kérdés
 
 Az audit típusát meg kell határozni mielőtt bármi elindul. Opciókat adjunk:
 
@@ -27,8 +37,8 @@ Ha típus = full audit:
 1. `[modell-javaslat]: Full audit → Opus 4.8 + ultrathink`
    Explicit instrukció: **válaszolj `ok ultrathink`-kel** — az `ultrathink` a jóváhagyó üzenetben kell hogy legyen, hogy a spawn turn-jén aktiváljon extended thinking
 2. Spawn `Agent(model: "opus", description: "Full AUDIT findings", prompt: <ld. lentebb>)`
-3. Subagent visszatér findings listával → Sonnet tárgyalja pontról pontra (ld. Tárgyalási fázis)
-4. Kód + dok diff-ek csak az összes pont lezárása után, egyszerre
+3. Subagent visszatér findings listával → **azonnal kiírni** `runtime/audit_session.md` Findings szekciójába
+4. Tárgyalási fázis + kód/dok diff-ek: ld. általános szabályok lentebb
 
 **Shortcut:** ha a user már az első üzenetben írja: `full audit ultrathink opus 4.8` — típus kérdés kihagyható, azonnal spawn.
 
@@ -46,8 +56,10 @@ Olvass el minden releváns fájlt:
 - loader/src/* (minden fájl)
 - server/* (minden fájl)
 
-Keresd: kód ↔ doksi ellentmondások, inkonzisztenciák, lebegő elemek, rossz helyen lévő állítások.
+Keresd: kód ↔ doksi ellentmondások, inkonzisztenciák, lebegő elemek, rossz helyen lévő állítások, duplikált logika (azonos vagy nagyon hasonló kódblokk több helyen).
 Hiányosság csak ha strukturálisan kritikus.
+
+Az `accepted.txt`-ben lezárt döntéseket ne hozd fel — kivéve ha a kód vagy doksi már nem egyezik a döntéssel.
 
 Findings formátum:
 F## [🔴/🟡/🟢] [kód/doc/arch] — [rövid cím]
@@ -59,7 +71,34 @@ Ne adj javítási kódot. Csak azonosítsd a problémákat. Listában add vissza
 
 ---
 
-## Tárgyalási fázis (Sonnet — main chat)
+## Általános szabályok (minden audit típusra)
+
+### Mit keresünk
+
+Kód ↔ doksi ellentmondások, inkonzisztenciák, lebegő elemek, rossz helyen lévő állítások, duplikált logika (azonos vagy nagyon hasonló kódblokk több helyen). Hiányosság csak ha strukturálisan kritikus. `accepted.txt`-ben lezárt döntéseket nem hozzuk fel — kivéve ha a kód/doksi már nem egyezik a döntéssel.
+
+---
+
+### Crash recovery — audit_session.md
+
+Minden audit típusnál:
+- Findings meghatározása után (subagent visszatér / inline elemzés kész) → azonnal kiírni `runtime/audit_session.md` Findings szekciójába
+- Tárgyalási fázis: minden lezárt pont után a döntés felkerül a Döntések szekciójába
+- Audit vége: `runtime/audit_session.md` törölhető
+
+```markdown
+# Audit session — <dátum>
+
+## Findings
+[lista]
+
+## Döntések
+- F##: [elfogadva / javítva / elvetett]
+```
+
+---
+
+### Tárgyalási fázis
 
 Pontról pontra, egyszerre egy felvetés. Fejlécen sorszám/total (`3/7`). Minden pont kérdéssel zárul — reakció után jön a következő.
 

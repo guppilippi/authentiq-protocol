@@ -805,7 +805,7 @@ Három külön Node.js processz külön portokon (külön domain szimuláció CO
 
 **Közös helper modul**: `server/util.js` (data-root resolve, directory require, body-read, request log, startup log).
 
-**Saját `server/package.json`** (`type: module`), nulla külső dep.
+**Saját `server/package.json`** (`type: module`).
 
 **CORS**: `Access-Control-Allow-Origin: *` mindkét szerveren (cross-port szimuláció a teljes WEB3-domain-szétválasztás imitálására).
 
@@ -821,14 +821,12 @@ Három külön Node.js processz külön portokon (külön domain szimuláció CO
 
 ```
 <dataRoot>/wallets/<wallet>/<cid>   ← tényleges fájl (wallet-szintű ownership)
-<dataRoot>/blobs/<cid>              ← hard link a wallet fájlra (közös feloldó hely)
+<dataRoot>/blobs/<cid>              ← symlink a wallet fájlra (közös feloldó hely)
 <dataRoot>/tokens/<tokenId>         ← config CID rögzítés (mint most)
 <dataRoot>/whitelist.json           ← engedélyezett wallet címek
 <dataRoot>/developers.json          ← wallet → fejlesztő név (admin)
 <dataRoot>/trash/                   ← GC által ide mozgatott tartalmak
 ```
-
-**Megjegyzés**: a megvalósult implementáció symlink-et használ (`fs/promises` `symlink`) — Linux-only deploy (Pi), Windows nem publish platform.
 
 ### 19.4. Tervezett wallet whitelist
 
@@ -888,7 +886,6 @@ A konkrét fogalom és képlet még pontosítandó.
 - IndexedDB ↔ WEB2/WEB3 publikálási/fork flow
 - WEB2 szerver írási endpoint-jai: `/aq/asset`, `/aq/token`, `/aq/token/:id`
 - Wallet aláírás ellenőrzés HTTP POST endpoint-okon (ecrecover)
-- Hard link alapú blob tárolás + wallet-enkénti könyvtár
 - GC crontab (árva CID-ek, dead linkek, trash 30 nap)
 - Publikáló funkció DAO (genesis verzió)
 - **Kapu DAO további funkciók** (lásd §14.7): QR scan / openDao, hamburger menü technikai megoldás (egy vs két iframe), keresés, switchGate capability

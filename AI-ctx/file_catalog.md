@@ -21,6 +21,7 @@
 | AI-ctx/runtime/changelog.md | ai | Elvégzett munka, változástörténet — csak kérésre |
 | AI-ctx/runtime/session.md | ai | Session notes — crash recovery, kulcspontok |
 | AI-ctx/runtime/handoff.md | ai | Mód-ok közötti kommunikáció |
+| AI-ctx/runtime/audit_session.md | ai | Audit crash recovery — findings + döntések; audit végén törölhető |
 | docs/AQ_Protocol_Canonical_Manifest.md | doc | Normatív protokoll alapelvek |
 | docs/AQ_Protocol_Concepts.md | doc | Nem normatív mentális modellek |
 | docs/AQ_Protocol_Implementation_Guide.md | doc | Referencia implementáció leírás |

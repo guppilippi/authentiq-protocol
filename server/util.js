@@ -28,8 +28,8 @@ export function requireDir(path, label) {
 	}
 }
 
-// HTTP request body olvasás stringként, méret-limittel (default 64 KB).
-export function readBody(req, maxBytes = 65536) {
+// HTTP request body olvasás; asBuffer:true → Buffer, egyébként UTF-8 string; default maxBytes: 64 KB.
+export function readBody(req, { asBuffer = false, maxBytes = 65536 } = {}) {
 	return new Promise((resolve, reject) => {
 		const chunks = [];
 		let total = 0;
@@ -42,7 +42,10 @@ export function readBody(req, maxBytes = 65536) {
 			}
 			chunks.push(c);
 		});
-		req.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
+		req.on("end", () => {
+			const buf = Buffer.concat(chunks);
+			resolve(asBuffer ? buf : buf.toString("utf-8"));
+		});
 		req.on("error", reject);
 	});
 }

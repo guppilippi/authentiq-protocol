@@ -170,7 +170,7 @@ export function validateRefPath(value) {
 	return { sub, name };
 }
 
-// devMode: tervezett — devMode-ban {path} is érvényes resolved ref (nem csak {cid}); jelenleg nem implementált.
+// devMode {path} ág a validateResolvedRef-en kívül fut (resolveRemoteRef adja vissza, fetchAssetBytes kezeli) — ez a validátor csak {cid}-et fogad el.
 export function validateResolvedRef(value, devMode) {
 	if (!isObject(value)) throw new Error("[AQ] resolved ref must be object");
 	if (typeof value.cid !== "string" || !CID_RE.test(value.cid))

@@ -168,7 +168,6 @@ async function runPublishProtocol(serverUrl) {
 
 async function runForkCurrentDao(serverUrl, tokenId) {
 	const wallet = fromRawSeed(seedGetRaw(), 1000);
-	navigator.clipboard.writeText(wallet.address).catch(() => {});
 
 	const rawCfg = getDaoCfg();
 	if (!rawCfg) throw new Error("DAO config not loaded");

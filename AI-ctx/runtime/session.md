@@ -280,6 +280,17 @@
 
 ---
 
+## 2026-06-08 — PLAN: file_catalog.tsv eltávolítás
+
+**Döntés:** Apps Script (Google Sheets Manifest) mostantól `file_catalog.md`-ből olvas közvetlenül Drive szinkronon át — TSV generálás és kézi másolás workflow megszűnt.
+
+**Elvégzett:**
+- `readConfig()` átírva: config tab `[files]` szekció helyett `file_catalog.md` markdown tábla parse; `ROOT_FOLDER_ID` + `CATALOG_FILE_ID` script konstansok
+- `AI-ctx/file_catalog.tsv` törölve
+- `AI-ctx/process.md` — TSV ref + `[drive-sheet]` emlékeztető eltávolítva
+
+---
+
 ## 2026-06-08 — SETUP: permission rendszer feltérképezés + screenshot fix
 
 **Megállapítások:**
@@ -397,6 +408,47 @@
 - F06: `switchDao(daoConfig)` — `daoConfig` = `{ contract, tokenId }` WEB3-on, naming helyes
 - F15: `gateWriter`/`mintOp` WEB3-hoz tervezett
 - F20: MIME tárolás nyitott tervezési kérdés (type mező vs DAO-oldali tudás)
+
+## 2026-06-08 — SETUP: audit/process.md fejlesztések
+
+**Elvégzett:**
+- Subagent prompt: `accepted.txt` szűrés hozzáadva (lezárt döntéseket ne hozza fel, kivéve ha kód/doksi már nem egyezik)
+- Általános szabályok szekció: `Mit keresünk` + crash recovery (`audit_session.md`) minden audit típusra
+- Session indítás: félbemaradt audit detektálás (`runtime/audit_session.md` meglét-ellenőrzés) — folytatás vagy eldobás
+- Duplikált logika keresése: subagent promptban + általános szabályokban
+- `file_catalog.md`: `runtime/audit_session.md` hozzáadva
+- `runtime/audit_session.md` létrehozva tesztként: F01 🟡 — duplikált finally/catch/loadContentDao blokk (`aqProtocolLoader.js` — `aqSeedGenComplete` + `boot`); javasolt fix: `runWithTokenId(fn)` wrapper
+
+**Nyitott:** F01 tárgyalás + döntés következő AUDIT sessionben
+
+---
+
+## 2026-06-08 — AUDIT: full sweep #4 (15 érdemi finding, Opus 4.8 subagent)
+
+**Kód változások:**
+- `server/util.js`: `readBody(req, { asBuffer?, maxBytes? })` — egységesített helper (asBuffer:true → Buffer, egyébként UTF-8; default maxBytes: 64 KB)
+- `server/aqServer.js`: `readBodyRaw` törölve → `readBody(req, { asBuffer: true, maxBytes: MAX_UPLOAD })`
+- `loader/src/aqHostMenu.js:171`: wallet clipboard-sor törölve (Wallet menü átvette a szerepét)
+- `loader/src/aqAssetRef.js:173`: komment javítva (devMode {path} a validátoron kívül fut, nem hiányzó feature)
+- `loader/src/aqStorage.js`: guard komment pontosítva (csak 64-hex vagy cid:-prefixű zárja ki)
+
+**Doc változások:**
+- `Documentation Rules §2`: Concepts szerepe átírva (kifejtett Manifest + rendszer viselkedés, nem fejlesztői referencia); §5 ábra; §6 célközönség-kivétel
+- `Guide §4.2` step 10: loader injekció cél dokumentálva (head || documentElement, DOM kész)
+- `Guide §11.1`: CID-guard invariáns hozzáadva
+- `Guide §12.6`: readBody szignatúra frissítve
+- `Guide §12.7`: "nulla külső dep" → "minimális külső dep (ethers)"
+- `Guide §13.3`: GET /cid/ nem-GET → 404 dokumentálva
+- `Guide §15.2`: seedStore visszatérési érték { stored: true }
+- `Guide §18.6`: Fork csak isPwa || devMode; wallet clipboard-mondat törölve
+- `Guide §18.7`: aqStorage → aqProtocol (DB név)
+- `Plan §19.1`: "nulla külső dep" mondat törölve (→ §14.1 elv)
+- `Plan §19.3`: hard link → symlink; megjegyzés törölve
+- `Plan Pending`: "Hard link alapú blob tárolás" sor törölve (implementált)
+
+**Elvetett:** F09 (resetData.js dev-only), F20 (getGateCfg csak devMode-only hívó), F03b elfogadva mint doc fix
+
+---
 
 ## 2026-06-08 — AUDIT: full sweep #2 (4 finding, javítva)
 
