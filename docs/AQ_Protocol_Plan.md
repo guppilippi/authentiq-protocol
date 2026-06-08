@@ -39,7 +39,7 @@ A WEB2 (random CID) és WEB3 (valódi hash) külön CID világok. Átjárás csa
 3. Kész config-ot feltölteni — CID-et kap
 4. Config CID-ét tokenId-hez rögzíteni
 
-A 4. lépés a két cél között eltér: WEB2-n HTTP POST (JSON-RPC `aq_setSwarmHash` kiterjesztés), WEB3-on on-chain `updatePage` tranzakció.
+A 4. lépés a két cél között eltér: WEB2-n HTTP POST (JSON-RPC `aqSetSwarmHash` kiterjesztés), WEB3-on on-chain `updatePage` tranzakció.
 
 ### 1.5. Service Worker + Cache API
 
@@ -818,7 +818,7 @@ Három külön Node.js processz külön portokon (külön domain szimuláció CO
 <dataRoot>/trash/                   ← GC által ide mozgatott tartalmak
 ```
 
-**Megjegyzés**: Windows-on a softlink fájlokra Developer Mode nélkül nem működik; helyettesítő a hard link (`fs.link`), ami NTFS-en standard userrel működik. Linuxon és Windows-on egyaránt elfogadott megoldás.
+**Megjegyzés**: a megvalósult implementáció symlink-et használ (`fs/promises` `symlink`) — Linux-only deploy (Pi), Windows nem publish platform.
 
 ### 19.4. Tervezett wallet whitelist
 

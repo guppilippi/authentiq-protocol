@@ -106,7 +106,19 @@ Minden doksi elején szerepeljen:
 
 ---
 
-## 8. Gyors döntési teszt
+## 8. Kód a dokumentációban
+
+Kód snippet (bármilyen programozási nyelven) **tilos** a dokumentációban. Indok: duplikálja a forrást, elkerülhetetlenül elavul.
+
+Helyette: viselkedés, feltételek és elágazások prózában leírva.
+
+Kivétel: shell parancsok, config formátum minták, JSON séma példák — ezek nem programkód, hanem adat vagy konfiguráció.
+
+`process.md` kiegészítő szabálya: diff fence szintén tilos projekt-doksiban.
+
+---
+
+## 9. Gyors döntési teszt
 Egy mondatra kérdezd meg:
 - számonkérhető? → Manifest
 - magyaráz? → Concepts

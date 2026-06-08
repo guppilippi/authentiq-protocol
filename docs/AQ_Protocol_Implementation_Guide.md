@@ -700,7 +700,7 @@ Példa: `["0x4fe481e8df86f415ffd5476ce6cfc15439234077"]`
 - Válasz: `{ cid: "<64-hex>" }`.
 
 **`GET /cid/<hash>`** — asset olvasás
-- CID formátum: `/^[0-9a-f]{64,128}$/i`.
+- CID formátum: `/^[0-9a-f]{64}$/i`.
 - Symlink-en keresztül olvas a `data/blobs/` mappából.
 - Válasz: `application/octet-stream`, `Cache-Control: immutable`.
 
@@ -829,9 +829,12 @@ A loader a boot során (nincs-seed ág) regisztrál egy globális `window.aqSeed
 
 `aqSeedGenComplete` lefutásakor:
 1. `setLocked(true)`, overlay megjelenítés.
-2. `renderGatePage()` — kapu DAO `defaultPage`-re vált (seed-gen UI leváltva).
+2. Session check: `isSeedUnlocked() || sessionLoad()`.
+   - Session aktív → `teardownGateDao()` (seed-gen UI DOM-ból eltávolítva).
+   - Session nem aktív → `renderGatePage()` (kapu DAO `defaultPage`-re vált).
 3. Ha `openTokenId` set: `loadContentDao(openTokenId)` — tartalmi DAO betöltése.
-4. `setLocked(false)`, overlay elrejtés.
+4. `initHostMenu()`.
+5. `setLocked(false)`, overlay elrejtés.
 
 ### 16.3. Platform célok
 
@@ -905,7 +908,7 @@ IndexedDB kulcsformátum: `wallet.<key>` a `_protocol` namespace-ben.
 
 ## 18. Host hamburger menü (`aqHostMenu.js`)
 
-Mindig aktív — devMode és production egyaránt. Az `aqProtocolLoader.js` hívja `initHostMenu()`-t a tartalmi DAO betöltése után.
+Mindig aktív — devMode és production egyaránt. Az `aqProtocolLoader.js` hívja `initHostMenu()`-t a boot flow végén (tartalmi DAO betöltése után, ha van).
 
 ### 18.1. UI struktúra
 
@@ -1014,31 +1017,20 @@ Logout = teljes IndexedDB törlés (§18.7 Clear IndexedDB).
 
 `aqProtocolLoader.js` normál boot ága (seed létezik):
 
-```
-const sessionActive = isSeedUnlocked() || await sessionLoad();
-if (!sessionActive) {
-    await loadGateDao(gateName, gateEntry); // auth prompt
-}
-await loadContentDao(openTokenId);
-initHostMenu();
-```
+`isSeedUnlocked()` szinkron check elsőbbséget kap, majd `sessionLoad()` async következik. Három eset:
+- Session nem aktív: `loadGateDao` hívódik (auth prompt, `defaultPage`).
+- Session aktív, devMode: `loadGateCfgOnly` hívódik render nélkül (Publish Gate előfeltétele).
+- Session aktív, production: gate kihagyva.
 
-- `isSeedUnlocked()` szinkron elsőbbséget kap.
-- Session aktív → gate DAO kihagyva.
-- Sem memória, sem session → gate DAO auth prompt (`defaultPage`).
+Ezután ha `openTokenId` set: `loadContentDao`, majd `initHostMenu()`.
 
 `aqSeedGenComplete` callback (seed-gen utáni ág):
 
-```
-const sessionActive = isSeedUnlocked() || await sessionLoad();
-if (sessionActive) {
-    teardownGateDao();      // seed-gen UI eltávolítása
-} else {
-    await renderGatePage(); // defaultPage (auth prompt)
-}
-await loadContentDao(openTokenId);
-initHostMenu();
-```
+Session check (`isSeedUnlocked() || sessionLoad()`). Két eset:
+- Session aktív: `teardownGateDao()` (seed-gen UI DOM-ból eltávolítva).
+- Session nem aktív: `renderGatePage()` (kapu DAO `defaultPage`, auth prompt).
+
+Ezután ha `openTokenId` set: `loadContentDao`, majd `initHostMenu()`.
 
 ### 19.4. Gate teardown (`teardownGateDao`)
 
