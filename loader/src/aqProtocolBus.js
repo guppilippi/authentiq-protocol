@@ -4,7 +4,7 @@
 
 import { iframe, overlayShowLocked, overlayHide, overlaySetLabel } from "./aqIframe.js";
 import {
-	loadPage, loadDaoConfig,
+	loadPage, loadContentDao,
 	getCurrentKey, getPendingInitKey, getAqSessionToken,
 	consumeReadyResolve,
 	aqRef, aqFetchText, aqFetchBytes,
@@ -35,7 +35,7 @@ const handlers = {
 	switchDao: (params) => {
 		const daoConfig = params?.daoConfig;
 		if (!daoConfig) throw new Error("switchDao: missing daoConfig");
-		return loadDaoConfig(daoConfig);
+		return loadContentDao(typeof daoConfig === "number" ? String(daoConfig) : daoConfig);
 	},
 
 	storagePut:    (p) => aqStoragePut(p?.name, p?.patch),

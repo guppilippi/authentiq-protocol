@@ -331,6 +331,13 @@
 
 ---
 
+## 2026-06-08 — AUDIT: namespace + docs (4 finding, javítva)
+
+**F01 🔴 javítva:** `loadContentDao` namespace `"cid:"+cid` → `"tokenId:"+openTokenId`; `loadDaoConfig` törölve; `switchDao` → `loadContentDao` hív; `setAqDaoNamespace` CID-guard hozzáadva; Guide §11.1 frissítve.
+**F02 🟢 javítva:** Plan §Pending `aq://` sor törölve.
+**F03 🟢 javítva:** Plan §Pending `single-flight` sor törölve.
+**F04 🟢 javítva:** Guide §14.4 `gate.done()` leírás pontosítva.
+
 ## 2026-06-08 — AUDIT: full sweep (5 finding)
 
 **F01 🟡 javítva:** Guide §16.2 aqSeedGenComplete flow — session check + teardownGateDao ág dokumentálva

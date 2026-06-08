@@ -9,7 +9,11 @@ const aqStorageAllowedChars = " _-.,:;@#()[]'\"+=!?";
 export const AQ_PROTOCOL_NS = "_protocol";
 
 export let aqDaoNamespace = "";
-export const setAqDaoNamespace = (ns) => { aqDaoNamespace = ns; };
+export const setAqDaoNamespace = (ns) => {
+	if (/^[0-9a-f]{64}$/i.test(ns) || ns.startsWith("cid:"))
+		throw new Error("[AQ] storage namespace cannot be CID-based: " + ns);
+	aqDaoNamespace = ns;
+};
 
 let aqIdbPromise = null;
 

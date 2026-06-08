@@ -330,15 +330,6 @@ async function _resolveGatePageAssets(pageKey) {
 	return { html, css, js, imageBlobUrls };
 }
 
-// Tartalmi (sima) DAO betöltése iframe-ben.
-export async function loadDaoConfig(daoRef) {
-	const normalized = (typeof daoRef === "string") ? daoRef.trim() : daoRef;
-	if (!normalized) throw new Error("[AQ] missing daoConfig");
-	const namespace = (typeof normalized === "string") ? normalized
-		: (normalized.cid ? "cid:" + normalized.cid : normalized.path);
-	await _loadDaoConfigInternal(normalized, namespace, false);
-}
-
 // Kapu DAO config betöltése renderelés nélkül (devMode publish célra).
 export async function loadGateCfgOnly(gateEntry) {
 	if (!gateEntry || typeof gateEntry !== "object") throw new Error("[AQ] loadGateCfgOnly: invalid entry");
@@ -405,7 +396,7 @@ export async function loadContentDao(openTokenId) {
 	}
 	const rpcUrls = parseRpcConfig(conf?.rpc, devMode);
 	const cid = await resolveDaoCid(openTokenId, rpcUrls);
-	const namespace = "cid:" + cid;
+	const namespace = "tokenId:" + openTokenId;
 	await _loadDaoConfigInternal(cid, namespace, false);
 }
 

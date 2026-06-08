@@ -460,7 +460,7 @@ A protokoll DAO-scope-olt text storage capability-t biztosít IndexedDB alapon, 
 #### Scope
 
 - Storage namespace = az aktuális DAO-hoz beállított `aqDaoNamespace` érték.
-  - Sima DAO esetén: a `daoRef` stringesített formája (lokális objektumra is, az asset ref kvázi-stringként).
+  - Sima DAO esetén: `"tokenId:" + tokenId`. Stabil a tartalom-frissítések alatt.
   - Kapu DAO esetén: `"gate:" + tokenId` (production) vagy `"gate:" + path` (devMode). Stabil a tartalom-frissítések alatt.
 - DAO váltás más namespace-re vált.
 - Azonos namespace-re visszatérés az adatokat változatlanul elérhetővé teszi.
@@ -770,7 +770,7 @@ A `seed.unlock` a teljes seed-et dekódolja és memóriában tartja — a kapu D
 
 | Metódus | Leírás |
 |---------|--------|
-| `gate.done()` | Auth flow befejezése: kapu DAO teardown, overlay eltüntetése |
+| `gate.done()` | Auth flow befejezése: kapu DAO DOM eltávolítása és blob URL-ek revoke-ja |
 
 ---
 

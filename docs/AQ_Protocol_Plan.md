@@ -680,6 +680,14 @@ Tárolt adatok (DAO felelőssége): aktuális oldal / lépés, kitöltött form 
 - Alap: configban nem hivatkozott hash + 30 nap → törlés
 - DAO-szintű (nincs cross-DAO referencia követés)
 
+### 15.4. Storage namespace — multi-contract bővítés
+
+Jelenleg (single contract): sima DAO namespace = `"tokenId:" + tokenId`. A contract cím implicit (egyetlen `DAO_CONTRACT` van).
+
+Ha több contract válik elfogadottá: a namespace `contractAddress + ":" + tokenId` alakra kell bővíteni, különben különböző contractokon lévő azonos tokenId-k ugyanabba a storage bucket-be kerülnek. Ez breaking change a meglévő storage kulcsokhoz — migrációt igényel.
+
+**Elfogadhatósági határ:** a jelenlegi `"tokenId:"`-only namespace kizárólag a WEB2 tesztelési fázisban fogadható el. WEB3 indulás előtt — mielőtt valós (nem törlendő) storage adat keletkezne — a multi-contract namespace formátumra kell átállni, hogy ne legyen szükség migrációra.
+
 ---
 
 ## 16. Egyéb tervezési irányok
@@ -871,11 +879,9 @@ A konkrét fogalom és képlet még pontosítandó.
 
 ## Pending
 
-- single-flight user action policy
 - status / cancel capability
 - **`cacheable` flag implementáció** (modul-state cache + browser HTTP cache no-store). A modul-state cache scope kibővítve a teljes távoli ref feloldási lánccal (lásd §16.1).
 - **Recovery flow** (seed elvesztés utáni helyreállítás — konszenzusos Shamir-rekonstrukció)
-- `aq://` asset referencia séma implementálása HTML/CSS-ben (loader előfeldolgozás)
 - refs és exports kezelés (böngészős DAO szerkesztésben)
 - IndexedDB ↔ WEB2/WEB3 publikálási/fork flow
 - WEB2 szerver írási endpoint-jai: `/aq/asset`, `/aq/token`, `/aq/token/:id`
