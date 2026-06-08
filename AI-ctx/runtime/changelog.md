@@ -4,6 +4,15 @@ Kérésre olvasandó. Automatikusan nem töltődik be.
 
 ---
 
+## 2026-06-08 — AUDIT: Guide §16.2/§13.3/§18/§19.3, Plan §1.4/§19.3, DocRules §8
+
+- §16.2: aqSeedGenComplete flow — session check + teardownGateDao ág dokumentálva
+- §13.3: CID_RE `{64,128}` → `{64}` (aqServer.js szinkron)
+- §18: initHostMenu kontextus pontosítva (nem `init`, hanem inline a boot entrypointban)
+- §19.3: kód snippetek → prose (Documentation Rules §8: kód tilos projekt-doksiban)
+- Plan §1.4: `aq_setSwarmHash` → `aqSetSwarmHash`
+- Plan §19.3: hard link megjegyzés → symlink (kész implementáció)
+
 ## 2026-06-07 — DOCSYNC: Guide §4/§13/§16/§18, Plan §14/§15
 
 - §4.1: `openTokenId` opcionális (URL param `?token=` → conf → null)
@@ -27,26 +36,3 @@ Kérésre olvasandó. Automatikusan nem töltődik be.
 - §19: új szekció — seed unlock, session, boot auth flow, gate teardown, aq:// séma, tokenId foglalás
 - accepted.txt: seed store döntések törölve (§15-ben dokumentált)
 
-## 2026-06-03 — Workflow redesign
-
-- CLAUDE.md mode dispatch tábla (PLAN/DEVp/DEVs/REVIEW/AUDIT/DOCSYNC)
-- session_state.md → AI context/runtime/state.md
-- aq_state/ törölve
-- AI context/runtime/screenshots/ törölve
-- Screenshot hook törölve settings.json-ból
-- settings.local.json: csak runtime/* wildcard permission
-
-## 2026-05 – 2026-06-02
-
-- aq:// asset referencia séma (devMode): preprocessAqRefs, blob URL inject HTML-be
-- Gate DAO auth flow + teardown (gate.done() unlock után)
-- Hamburger menü: Wallet, Publish Gate, Refresh Protocol, Clear IndexedDB (devMode); Fork DAO (prod)
-- Seed létrehozás + unlock (jelszó / WebAuthn-PRF) + session (aqSession IndexedDB)
-- Pi deploy: https://damjanch.mooo.com, port 8083, systemd + nginx
-- Server reset: resetData.js + resetServer.ps1
-- WEB2 GC design döntés (replaces elvetett → POST /aq/retire flow)
-- TokenId foglalás: 0 / 1–99 / 100+
-- Fork/publish flow generikus (minden DAO-ra)
-- SeedGen assetjei gate config refs-be kerültek; gates.aq (korábban gates.test)
-- Gate config contracts/tokens szekciók eltávolítva (remote ref séma refaktor)
-- Protokol config refs szekció eltávolítva

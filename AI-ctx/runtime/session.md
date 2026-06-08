@@ -318,3 +318,15 @@
 - Feltételek: immutable bootstrap (stabil CID), pinning garantált
 - Fenntartás: harmadik fél gateway (kevesebb kontroll mint saját szerver), IPFS vs Swarm hálózat-keveredés
 - Nyitott: pinning kockázat elfogadhatósága
+
+## 2026-06-08 — AUDIT: full sweep (5 finding)
+
+**F01 🟡 javítva:** Guide §16.2 aqSeedGenComplete flow — session check + teardownGateDao ág dokumentálva
+**F02 🟡 javítva:** Guide §13.3 CID_RE `{64,128}` → `{64}` (aqServer.js szinkron)
+**F03 🟢 javítva:** Guide §18 initHostMenu kontextus pontosítva
+**F04 🟢 javítva:** Plan §1.4 `aq_setSwarmHash` → `aqSetSwarmHash`
+**F05 🟢 javítva:** Plan §19.3 hard link megjegyzés → symlink (kész implementáció)
+
+**Mellékesen:** Guide §19.3 kód snippetek → prose (új szabály: kód tilos projekt-doksiban → Documentation Rules §8)
+
+**Commit:** 4513336 — push: main
