@@ -319,6 +319,18 @@
 - Fenntartás: harmadik fél gateway (kevesebb kontroll mint saját szerver), IPFS vs Swarm hálózat-keveredés
 - Nyitott: pinning kockázat elfogadhatósága
 
+## 2026-06-08 — SETUP: screenshot workflow lezárás
+
+**Megállapítások:**
+- Inline PowerShell screenshot permission nem matchel megbízhatóan — `[System.Windows.Forms...]` szögletes zárójelek regex character class-ként értelmezhetők
+- Döntés: marad inline command + elfogadott prompt (2-es gomb); script nem kell
+- `settings.local.json` cleanup: stale `save-screenshot.ps1` + inline PowerShell permission eltávolítva; marad: Write/Edit AI-ctx/runtime/*
+- **Alt+V discovery:** clipboard kép direktben beilleszthető Claude Code chat inputba — a teljes script/inline workflow elavult
+- Alt+V quirk: első nyomásra olykor "nincs kép a vágólapon" (race condition) → újra kell nyomni
+- Memory frissítve: project_screenshot_workflow.md
+
+---
+
 ## 2026-06-08 — AUDIT: full sweep (5 finding)
 
 **F01 🟡 javítva:** Guide §16.2 aqSeedGenComplete flow — session check + teardownGateDao ág dokumentálva
