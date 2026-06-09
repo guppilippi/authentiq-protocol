@@ -503,3 +503,24 @@
 - `docs/AQ_WEB2_Server_Guide.md` létrehozva: Guide §12 + §13 tartalma (WEB2 lokális dev szerver + AQS write szerver)
 - Guide §12–13 helyén: utalás az új fájlra
 - `file_catalog.md`: új `doc` bejegyzés
+
+## 2026-06-10 — PLAN: Orchestrator architektúra + MiniMax M3 teszt
+
+**MiniMax M3:**
+- `test-minimax/` könyvtár + `settings.json` override (ANTHROPIC_BASE_URL + MODEL) — percek alatt fut
+- M3 architektúra-javaslatot adott (agent-ctx/ struktúra) — helyes, DAO config analógiát jól alkalmazta
+- Következtetés: subagentnek logikus (rate limit célzottan fogy), nem orchestratornak
+- `test-minimax/` törölve, API kulcs rotálandó (Drive sync-re felkerült)
+
+**Orchestrator architektúra — rögzített döntések (state.md):**
+- Egyetlen permanens PLAN session; napokig/hetekig nyitva; crashból fájlokból folytatható
+- Mód-rendszer megszűnik tab-ként — DEVp/AUDIT stb. = subagent context template, nem külön session
+- Subagent model-agnosztikus: Claude, M3, vagy bármely URL-olvasó LLM
+- DEVp subagent scope: csak `output/summary.md`-ba ír; projekt fájlokat nem érinti
+- agent-ctx/ struktúra: `registry.json` (audit trail) + `<cid>/config.json` (path→CID, DAO config minta)
+- Context fájl séma: `{ "path": "..." }` most, `{ "cid": "..." }` protokoll kész után
+
+**Egyéb:**
+- `.gitignore`: `AI-ctx/runtime/agent-ctx/` + `test-minimax/` hozzáadva
+- SETUP tab megnyitva — tesztkérdésre helyes választ adott (érti a kontextust)
+- Chat local tárolás téma ejtve (orchestrator architektúrában inherensen megoldott)
