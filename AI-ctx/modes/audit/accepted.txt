@@ -34,6 +34,17 @@ Amit DOCSYNC során doksiba viszünk: törlendő innen. A doksi az elsődleges f
 - WEB3-on az on-chain ownership mechanizmus adja a védelmet; kód-szintű enforcement ott tervezendő.
 - A genesis admin feladata: tokenId=0 (protokoll config) és tokenId=1 (gate DAO) explicit első írása — ez egyben ownership-foglalás.
 
+## PWA bootstrap web2 szerver (tervezési döntés)
+
+- A PWA `start_url` HTTP/HTTPS-t igényel → saját web2 szerver elfogadható kompromisszum.
+- A web2 réteg kizárólag statikus bootstrap (index.html, manifest.json, sw.js) + tokenId→CID API; minden tartalmi adat Swarmból jön.
+- Teljes trustless bootstrap nem cél — a pragmatikus PWA elérhetőség fontosabb.
+
+## Boot flow duplikáció (audit-felvetés válasza)
+
+- `aqProtocolLoader.js`: `aqSeedGenComplete` és `boot` azonos setup/teardown blokkjai (`setLocked`, `catch`, `finally`) szándékosan nem kiemelve.
+- Indok: boot flow stabil, teardown bővülése nem várható; wrapper a return-false konvenció miatt kevésbé olvasható lenne.
+
 ## Audit szintezés (audit-felvetés válasza)
 
 - Funkció és asset szintű, nem DAO szintű.

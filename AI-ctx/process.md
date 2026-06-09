@@ -36,6 +36,7 @@ Jelzés a felhasználónak: `[title] Ctrl+V + Enter`
 - Diff: unified, 1-2 kontextussorral. Projekt-doksiba diff fence nem kerülhet.
 - Diff csak felhasználói válasz után küldhető.
 - Fájlokba nem kerülnek "volt X, most Y" bejegyzések — ezek a `runtime/changelog.md`-be mennek.
+- Kérdésre csak információ, nem döntési javaslat. Tervezési döntést, megoldást, javaslatot csak explicit felkérésre hoz. HIBÁNAK minősül, ha kérés nélkül helyettesíti a felhasználó döntéshozatalát.
 
 ---
 

@@ -27,7 +27,6 @@ Data root: `/var/www/sftp/szoke/sftp/sftp/data/`
 3. PWA: `manifest.json` + ikonok + `sw.js` → Pi deploy
 3. Real device teszt (Pixel 7, damjanch.mooo.com) — standalone mód + WebAuthn-PRF ellenőrzés
 4. WEB2 GC: `POST /aq/retire` endpoint + periodic orphan scan
-5. Bus relay: gate DAO adat (wallet cím) elérhetővé tétele content DAO iframe-eknek
 
 ## Tervezési döntések (Plan-szinkronra vár)
 
@@ -169,8 +168,8 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 
 ## Tervezett refaktorok (következő DEVp)
 
-- **Ref feloldási pipeline egységesítés**: `aqLoaderCore.js` inline path/tokenId/CID elágazások → `classifyRef`-alapú pipeline (`aqAssetRef.js` előkészített függvényekkel). WEB3 flow előtt elvégzendő.
-- **Ref `type` mező**: MIME tárolás a ref sémában — nyitott tervezési kérdés (explicit `type` vs kategória-alapú). Döntés WEB3 ref-séma tervezéskor.
+- **`resolveGateEntry` kiemelés**: `loadGateCfgOnly` és `loadGateDao` azonos ~10 soros blokkot tartalmaz (path/tokenId → daoRef + namespace). Triviális helper-kiemelés, csak ha más módosítás is érinti a területet.
+
 
 ## Ismert javítandók (AI workflow)
 
@@ -178,6 +177,37 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 
 ## Függő témák (következő session)
 
-### PWA bootstrap centralizáltság
-A PWA `start_url` stabil HTTP/HTTPS URL-t igényel — tisztán web3-ból (CID) nem szolgálható ki, mert a CID változik a tartalommal. Minimalizálható: web2 csak statikus bootstrap (index.html + manifest.json), minden más Swarmból. ENS + gateway közelít, de web2 réteg marad. Kérdés: milyen manifest-stratégia fogadható el a decentralizáltsági elvek szempontjából? → Hosszabb eszmecseré, PLAN módban.
+### i18n fejlesztési utasítások
+Az i18n architektúra döntései rögzítve (state.md §i18n). Következő lépés: konkrét fejlesztési utasítások kidolgozása — mit kap a DAO, mit csinál a loader, milyen API-n keresztül vált nyelvet. PLAN módban.
+
+### ⭐ Orchestrator architektúra — PRIORITÁS (közeljövő)
+Hatékonyság fejlesztés, további előrehaladás előfeltétele.
+
+**Közvetlen lépés:** főagent kontextust fájlokba ír (`AI-ctx/runtime/agent-ctx/`, nem gitelt) → subagent olvassa, feldolgoz, tömör summát ad vissza → főagent csak summát lát. Token-eloszlás: nehéz munka subagentben fogy.
+
+**Evolúció:** főagent = állandó orchestrator, mód-subagenteket hív (PLAN/DEVp/AUDIT agent saját process.md-jével) → módváltás nem tab-váltás, hanem orchestrator-hívás → főagent kontextusa csak döntések és summák.
+
+**PLAN = orchestrator + döntéshozó** (nem implementál, de irányítja a végrehajtó subagenteket). PLAN session indítja és koordinálja a mód-subagenteket (DEVp/AUDIT/DOCSYNC). PLAN process.md pontosítandó ennek megfelelően.
+
+SETUP módban implementálandó (agent-ctx/ struktúra, gitignore, handoff formátum, process.md bővítések).
+
+### Docs protokoll-alapokra + URL-alapú subagent kommunikáció
+**Docs mint DAO:** hosszú távú, de nem messze — a protokollal együtt épül (ami maga is könyvtárstruktúraként indult). Minden doc szekció = CID-del hivatkozható tartalom; template = instantiálható DAO config; LLM leírásból + kész template-ből épít DAO-t.
+
+**URL-alapú subagent:** ha a tartalom CID → HTTP URL-en elérhető, bármely LLM ami URL-t olvas subagentként használható a protokollon keresztül. A protokoll = univerzális inter-agent kommunikációs réteg. Orchestrator (Claude) CID-et referál → subagent (bármely modell) URL-ről betölti, feldolgozza, visszaad.
+
+PLAN módban kidolgozandó az orchestrator architektúrával együtt.
+
+**Keresés protokoll-alapon:** minden tartalom CID-del címzett → "keresni" = tokenId/CID megtalálása a root set-ben. A protokoll root set-je maga az index — külső crawler nem kell. Keresőmotor = protokoll-natív traversal. Ez a "docs mint DAO" következménye: dokumentum megkeresése = protokoll lookup.
+
+**Traversal belépési pont:** subagent DAO configot kap (JSON, CID hivatkozásokkal) → CID feloldás: devMode = path, prod = protokoll. Nincs külön "discovery" mechanizmus szükséges — a config maga a belépési pont.
+
+### LLM kontextus fejlesztés — összetartozó témacsomag
+Három összefüggő téma, sorrendben:
+
+1. **Guide index** (előfeltétel): Guide szekciók indexelése → AGENTS.md hivatkozhat rájuk (`→ Guide §12.6`) ismétlés nélkül; tömör, LLM-optimalizált referenciák
+2. **Per-directory AGENTS.md** (DOX minta): `loader/src/` és `server/` lokális invariánsok DEVp/DEVs módban, Guide indexre támaszkodva; globális `AI-ctx/` megmarad mód-logikának
+3. **Chat local tárolás** (független): kulcsszóval jelölt döntések/megállapítások mentése kereshető formában; nem minden üzenet, csak jelöltek
+
+Referencia: [DOX projekt](https://github.com/agent0ai/dox). PLAN módban tervezendő.
 
