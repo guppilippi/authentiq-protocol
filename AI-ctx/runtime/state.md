@@ -214,6 +214,7 @@ Következmény: auto-compact ritka (főagent context lassan nő), chat history s
 
 ```
 AI-ctx/runtime/agent-ctx/          ← gitignore-ban, Drive sync-ből kizárva
+├── registry.json                  ← melyik agentet hívtad mikor (cid, agent típus, timestamp, task röviden)
 └── <generated-cid>/               ← egy subagent hívás = egy folder
     ├── config.json                ← belépési pont: mi ez, milyen fájlok, refs (path→CID evolúció)
     ├── task.md                    ← mit kell csinálni
@@ -224,6 +225,7 @@ AI-ctx/runtime/agent-ctx/          ← gitignore-ban, Drive sync-ből kizárva
 ```
 
 `config.json` séma: DAO config mintája — `{ "path": "..." }` most, `{ "cid": "..." }` később.  
+`registry.json`: minden subagent hívás után főagent frissíti — audit trail + visszakereshetőség.  
 CLAUDE.md szöveges leírással egészítheti ki.
 
 **DEVp subagent scope:** forrás fájlokba írhat közvetlenül (saját könyvtár + érintett src). A főagent kizárólag `output/summary.md`-t olvas vissza — ha ezt kihagyja, a karmester szerep elveszik.
