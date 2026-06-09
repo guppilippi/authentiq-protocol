@@ -457,6 +457,46 @@
 **F03 🟡 javítva (doc):** Guide §5.2 pont 1: `aqGateDAOName` olvasott mező dokumentálva (`meta` mező; `protocolStorage.put("aqGateDAOName", { meta: "<gateName>" })`).
 **F04 🟢 javítva (doc):** Plan §14.6 gate API seed lista: `unlock`, `activate` hozzáadva.
 
+## 2026-06-09 — PLAN: nyitott témák áttekintés
+
+**Lezárva:**
+- `runWithTokenId` wrapper → A (hagyni), `accepted.txt`-be rögzítve
+- PWA bootstrap web2 szerver → elfogadható kompromisszum, `accepted.txt`-be rögzítve
+- Bus relay → törölve, funkció-specifikus, előre nem tárgyalandó
+- Ref feloldási pipeline → `classifyRef` moot (CID DAO betöltés sosem lesz); `resolveGateEntry` opcionális refaktor, DEVp listán
+
+**Felvéve:**
+- i18n fejlesztési utasítások kidolgozása → következő PLAN session
+
+## 2026-06-09 — PLAN: runWithTokenId wrapper eldöntve
+
+**Döntés:** A — hagyni ahogy van. Boot flow stabil, finally bővülés nem várható. 8 soros duplication nem kockázat.
+
+---
+
+## 2026-06-09 — PLAN: process.md Hard constraints bővítés
+
+**Elvégzett:**
+- `AI-ctx/process.md` Hard constraints: kérdésre csak információ, nem döntési javaslat — kérés nélküli helyettesítés HIBA
+- Memória-fájl (`feedback_no_unsolicited_design.md`) törölve — rule process.md-ben van
+
+**i18n témakör:** következő PLAN sessionben folytatódik. Nyitott: 4 kérdés (refs.i18n séma illeszkedés, init flow, nyelvváltás API, gate↔loader mechanizmus — ez utóbbiból nincs rögzítve más, csak "loader átadja").
+
+---
+
+## 2026-06-09 — PLAN: Manifest bővítés + sum.txt protokoll összefoglaló
+
+**Elvégzett:**
+- `AQ_Protocol_Canonical_Manifest.md`: 3 új alapelv hozzáadva — Kulcs-map, Identitás-eszköz, Trust réteg (gate)
+- `AI-ctx/sum.txt`: Protokoll összefoglaló szekció hozzáadva (Manifest kivonat, session-betölthető)
+
+**Kontextus:** A protokoll lényege (kulcs-map + PWA + gate/trust) elveszett a növekvő doksiban és kódban. A Manifest tartalmazta az elveket, de nem töltötte be a session. Fix: Manifest bővítve, sum.txt-be kivonat kerül.
+
+**Nyitott:**
+- 2-es téma: humán + LLM párhuzamos doc formátum (külön session)
+- 4-es téma: napi chat local tárolás (egyszerűbb mint tűnt, külön session)
+- DOX projekt (agent0ai/dox) referencia a 2-es témához
+
 ## 2026-06-08 — DOCSYNC: AQ_WEB2_Server_Guide.md leválasztás
 
 **Elvégzett:**

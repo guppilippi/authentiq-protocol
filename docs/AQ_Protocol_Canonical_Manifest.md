@@ -92,6 +92,21 @@ A protokoll futtatásához szükséges a **hash → tartalom (byte)** feloldás,
 
 ---
 
+### Kulcs-map
+A protokoll minden publikált tartalmához és állapotához egy kulcspár tartozik. A kulcspár–tartalom mapping kizárólag az identitás-tartó számára ismert. A tartalom-hash nyilvánosan látható; a tartalom elérése a megfelelő kulcspár ismeretét feltételezi.
+
+---
+
+### Identitás-eszköz
+A kulcs-mapping kezelésének eszköze az identitás-tartó kizárólagos hozzáférési pontja. Ez nem alkalmazás — a protokoll infrastruktúrájának része.
+
+---
+
+### Trust réteg
+A protokoll trust-et kategóriákban kezel. A gate a protokoll első szintű hitelesítési mechanizmusa.
+
+---
+
 ### Offline-first, local-first
 Az állapotok és struktúrák lokálisan épülnek fel.
 A publikálás külön, tudatos művelet.

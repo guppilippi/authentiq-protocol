@@ -8,6 +8,22 @@ Prioritás: process.md > sum.txt > accepted.txt > projekt doksi és kód.
 - Plan: ami nincs még kész vagy nincs eldöntve.
 - Egyéb csatolt: referencia, nem normatív.
 
+# Protokoll összefoglaló (Manifest kivonat)
+AQ = nyílt decentralizált digitális közmű közösségek állapotkezeléséhez. Nem alkalmazás, nem platform — infrastruktúra.
+
+Alapfogalmak: DAO (entitás; identitás / funkció kétféle), REL (kapcsolat), CTXG (kontextusgráf).
+
+Alapelvek:
+- Kulcs-map: minden tartalom/állapot kulcspárhoz tartozik; mapping csak az identitás-tartónak ismert
+- Identitás-eszköz: a kulcs-map hozzáférési pontja; protokoll infrastruktúra, nem alkalmazás
+- Gate: első szintű hitelesítési mechanizmus, trust kategóriákban
+- Immutable by default: publikált állapot nem változik; új állapot = új Root Object
+- Verzió = tartalom-hash; URL ≠ identitás
+- Offline-first, local-first
+- Root set: ami nincs benne, protokoll-szinten nem létezik
+
+aqProtocol maga is funkció DAO (első szintű).
+
 # AI-ctx struktúra
 - accepted.txt: `modes/audit/accepted.txt` — csak amit sehol máshol nem lehet rögzíteni
 - doc_sync_pending.md: `modes/docsync/doc_sync_pending.md`
