@@ -185,11 +185,50 @@ Hatékonyság fejlesztés, további előrehaladás előfeltétele.
 
 **Közvetlen lépés:** főagent kontextust fájlokba ír (`AI-ctx/runtime/agent-ctx/`, nem gitelt) → subagent olvassa, feldolgoz, tömör summát ad vissza → főagent csak summát lát. Token-eloszlás: nehéz munka subagentben fogy.
 
-**Evolúció:** főagent = állandó orchestrator, mód-subagenteket hív (PLAN/DEVp/AUDIT agent saját process.md-jével) → módváltás nem tab-váltás, hanem orchestrator-hívás → főagent kontextusa csak döntések és summák.
+**Teljes vízió (irány rögzítve):**
 
-**PLAN = orchestrator + döntéshozó** (nem implementál, de irányítja a végrehajtó subagenteket). PLAN session indítja és koordinálja a mód-subagenteket (DEVp/AUDIT/DOCSYNC). PLAN process.md pontosítandó ennek megfelelően.
+Főagent feladata kizárólag: context assembly + refinement + dokumentálás.
 
-SETUP módban implementálandó (agent-ctx/ struktúra, gitignore, handoff formátum, process.md bővítések).
+Loop:
+1. Főagent összerakja a context struktúrát → fájlba írja (config: mi micsoda)
+2. Subagent betölti, elvégzi a munkát
+3. Ha a subagent outputja context-hiányt jelez (kérdés / hiányos eredmény) → főagent finomítja a *context fájlt*, új subagent indul a pontosított contexttel
+4. Ha nincs hiány → főagent dokumentál
+
+Visszakérdezés nem a chatben megy — a context fájl frissül, főagent contextje nem nő a loop alatt.
+
+Context forrása: DAO config mintájára — path vagy CID alapján oldható fel. Most: csak path (mint a protokoll korai stádiuma). Később: CID → HTTP URL → bármely URL-olvasó LLM subagentként használható, file-független context.
+
+Következmény: auto-compact ritka (főagent context lassan nő), chat history search felöslegesedik (minden állapot fájlban).
+
+**Architektúra-váltás (rögzítve):**
+
+- **Egyetlen session:** mindig PLAN módban indul, főagent = permanens orchestrator
+- **Mód-rendszer megszűnik tab-ként:** DEVp/DEVs/AUDIT stb. nem külön session — a főagent rakja össze a subagent contextjét célzottan (manifest-kivonat + pontosan ami kell, semmi más)
+- **Subagent model-agnosztikus:** ugyanaz a belépési pont (agent-ctx/<cid>/config.json), Claude vagy M3 vagy bármely URL-olvasó LLM
+- **DEVp subagent scope:** csak saját agent-ctx/<cid>/output/-ba ír (diff, patch, eredmény); a projekt forrás fájljait nem érinti közvetlenül — főagent dönt és alkalmaz
+- **process.md fájlok szerepe változik:** nem session-indítás, hanem subagent context template (főagent ebből vonja ki a releváns részt)
+- **plan/process.md:** orchestrator-logikával bővítendő; ez a főagent egyetlen process fájlja
+
+**agent-ctx/ struktúra (rögzítve):**
+
+```
+AI-ctx/runtime/agent-ctx/          ← gitignore-ban, Drive sync-ből kizárva
+└── <generated-cid>/               ← egy subagent hívás = egy folder
+    ├── config.json                ← belépési pont: mi ez, milyen fájlok, refs (path→CID evolúció)
+    ├── task.md                    ← mit kell csinálni
+    ├── context.md                 ← releváns state részlet, döntések, korlátok
+    ├── input/                     ← amin dolgozik (opcionális)
+    └── output/
+        └── summary.md             ← ≤30 sor; ez az egyetlen visszacsatorna a főagentnek
+```
+
+`config.json` séma: DAO config mintája — `{ "path": "..." }` most, `{ "cid": "..." }` később.  
+CLAUDE.md szöveges leírással egészítheti ki.
+
+**DEVp subagent scope:** forrás fájlokba írhat közvetlenül (saját könyvtár + érintett src). A főagent kizárólag `output/summary.md`-t olvas vissza — ha ezt kihagyja, a karmester szerep elveszik.
+
+SETUP módban implementálandó (gitignore kész, CLAUDE.md bővítés, process.md handoff formátum).
 
 ### Docs protokoll-alapokra + URL-alapú subagent kommunikáció
 **Docs mint DAO:** hosszú távú, de nem messze — a protokollal együtt épül (ami maga is könyvtárstruktúraként indult). Minden doc szekció = CID-del hivatkozható tartalom; template = instantiálható DAO config; LLM leírásból + kész template-ből épít DAO-t.
@@ -203,11 +242,12 @@ PLAN módban kidolgozandó az orchestrator architektúrával együtt.
 **Traversal belépési pont:** subagent DAO configot kap (JSON, CID hivatkozásokkal) → CID feloldás: devMode = path, prod = protokoll. Nincs külön "discovery" mechanizmus szükséges — a config maga a belépési pont.
 
 ### LLM kontextus fejlesztés — összetartozó témacsomag
-Három összefüggő téma, sorrendben:
+Két összefüggő téma, sorrendben:
 
 1. **Guide index** (előfeltétel): Guide szekciók indexelése → AGENTS.md hivatkozhat rájuk (`→ Guide §12.6`) ismétlés nélkül; tömör, LLM-optimalizált referenciák
 2. **Per-directory AGENTS.md** (DOX minta): `loader/src/` és `server/` lokális invariánsok DEVp/DEVs módban, Guide indexre támaszkodva; globális `AI-ctx/` megmarad mód-logikának
-3. **Chat local tárolás** (független): kulcsszóval jelölt döntések/megállapítások mentése kereshető formában; nem minden üzenet, csak jelöltek
+
+Chat local tárolás: ejtve — orchestrator architektúrában minden lépés fájlba/CID-be kerül, visszakeresés inherensen megoldott.
 
 Referencia: [DOX projekt](https://github.com/agent0ai/dox). PLAN módban tervezendő.
 

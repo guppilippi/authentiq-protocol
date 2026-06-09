@@ -3,3 +3,5 @@ loader/node_modules/
 desktop.ini
 .tmp.driveupload/
 AI-ctx/runtime/screenshot.png
+AI-ctx/runtime/agent-ctx/
+test-minimax/
