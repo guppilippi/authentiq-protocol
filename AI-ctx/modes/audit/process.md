@@ -148,7 +148,7 @@ Minden audit típusnál:
 
 ### Tárgyalási fázis
 
-Pontról pontra, egyszerre egy felvetés. Fejlécen sorszám/total (`3/7`). Minden pont kérdéssel zárul — reakció után jön a következő.
+Pontról pontra, egyszerre egy felvetés. Fejlécen sorszám/total (`3/7`).
 
 Szintek: 🔴 blokkoló / 🟡 érdemi / 🟢 alacsony
 
@@ -157,6 +157,15 @@ Megszakítható: `AUDIT: SKIP` vagy "nincs érdemi felvetés".
 Kód- és doksi változások az audit végén egyszerre íródnak ki — nem menet közben.
 
 Ha csatolt kód vagy doksi van és érdemi anyag: felvetés kötelező.
+
+#### Döntési formátum
+
+Minden döntési kérdésnél `AskUserQuestion` toolon keresztül. Minden opció description mezőjében a bizonyossági %. Az utolsó opció mindig "más" — saját %-kal. A menüpont kiválasztása maga a döntés, nincs külön megerősítés. A % megfigyelési célú: mikor vezethető be automatikus döntés.
+
+Példa opciók:
+- "elfogadva — DOCSYNC" | 75%
+- "elvetett" | 20%
+- "más" | 5%
 
 ---
 

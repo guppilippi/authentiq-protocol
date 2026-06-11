@@ -504,6 +504,16 @@
 - Guide §12–13 helyén: utalás az új fájlra
 - `file_catalog.md`: új `doc` bejegyzés
 
+## 2026-06-11 — AUDIT: workflow szabályok + memory cleanup
+
+**Elvégzett:**
+- Memory fájlok átvezetve AI-ctx fájlokba (process.md, user.md), memory könyvtár kiürítve
+- process.md: git push workflow (single command), no unnecessary scripts, azonnali írás, memory→AI-ctx szabály
+- user.md: screenshot Alt+V workflow
+- Következő session: AUDIT mód, full audit Fable 5 + ultrathink (workflow átszervezés előtt), utána PLAN
+
+---
+
 ## 2026-06-11 — AUDIT: Fable 5 security audit tárgyalás + F01 javítás
 
 **17 finding tárgyalva:**
@@ -562,6 +572,22 @@ Elvek: token-pool szétválasztás (Claude + M3), minimális fogyasztás, körny
 - _fable_test/ temp mappa: törölhető-e vagy marad referenciaként?
 - SETUP: orchestrator implementáció (CLAUDE.md, plan/process.md, agent-ctx struktúra, task.md template, verifier skeleton)
 - Fable 5 audit findings tárgyalása — mikor indul (AUDIT módban)?
+
+## 2026-06-11 — AUDIT: full audit Fable 5 (18 finding)
+
+**Elfogadva (kód — DEVs later):**
+- F03: `aqProtocolLoader.js` — `loadGateCfgOnly` ág: `isSeedUnlocked()` feltétel ki (config olvasás seed nélkül is mehet)
+- F04: `aqProtocolLoader.js` — `initHostMenu()` duplikált hívás a seed-gen flow-ban javítandó (csak "start" végén)
+- F15: `aqAssetFetch.js:28` — komment: `{rpc?, contract, tokenId}` → `{tokenName}`
+- F17: `aqLoaderCore.js` — `loadGateCfgOnly` + `loadGateDao` gate-entry feloldó blokk → közös segédfüggvény
+- F18: `cidServer.js` CID_RE `{64,128}` → `{64}`; 405 non-GET; közös logika `util.js`-be (`cidServer` + `aqServer` /cid/ + /rpc eth_call)
+
+**Elfogadva (DOCSYNC — rövid eszmecsere után):**
+- F02, F06, F07, F08, F09, F10, F11, F12, F14, F16 — ld. `doc_sync_pending.md`
+
+**Elvetett:** F01 (build auto), F05 (WEB3 later), F13 (Concepts jelleg)
+
+---
 
 ## 2026-06-10 — PLAN: Orchestrator architektúra + MiniMax M3 teszt
 

@@ -129,7 +129,7 @@ Ha a session lezárul (felhasználó jelzi, vagy Claude `[mód-javaslat]` / `[mo
 Kötelező sorrend git előtt:
 1. Összes módosított fájl kiírva (kód, doksi, AI-ctx)
 2. Session close fájlok frissítve (`session.md`, `state.md`, `user.md` ha kell)
-3. Összefoglaló a felhasználónak — jóváhagyás után git add + commit + push
+3. Összefoglaló a felhasználónak — jóváhagyás után egyetlen PowerShell hívásban: `git add <fájlok>; git commit -m @'...'@; git push`
 
 Git push után a session azonnal zárható.
 
