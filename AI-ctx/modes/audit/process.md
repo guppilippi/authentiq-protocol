@@ -23,6 +23,7 @@
 Az audit típusát meg kell határozni mielőtt bármi elindul. Opciókat adjunk:
 
 - **Full audit** — összes doc + src + server fájl; subagent flow (ld. lentebb)
+- **Security audit** — biztonsági határok, trust boundary, kulcskezelés; subagent flow Fable 5-tel (ld. lentebb)
 - **Targeted** — felhasználó megad fájlokat / szekciót; main chatben, inline
 - **Gyors** — csak 🔴 blokkolók; main chatben, inline
 
@@ -65,6 +66,53 @@ Findings formátum:
 F## [🔴/🟡/🟢] [kód/doc/arch] — [rövid cím]
 Érintett: [fájl:sor vagy dok szekció]
 Leírás: [mit találtál, miért probléma]
+
+Ne adj javítási kódot. Csak azonosítsd a problémákat. Listában add vissza az összes findinget.
+---
+
+---
+
+## Security audit — subagent flow
+
+Ha típus = security audit:
+
+1. `[modell-javaslat]: Security audit → Fable 5 + ultrathink`
+   Explicit instrukció: **válaszolj `ok ultrathink`-kel**
+2. Spawn `Agent(model: "fable", description: "Security AUDIT findings", prompt: <ld. lentebb>)`
+3. Subagent visszatér findings listával → azonnal kiírni `runtime/audit_session.md` Findings szekciójába
+4. Tárgyalási fázis: ld. általános szabályok lentebb
+
+**Shortcut:** `security audit ultrathink` — típus kérdés kihagyható, azonnal spawn.
+
+### Subagent prompt template
+
+---
+Security AUDIT feladat — AuthentiQ projekt.
+
+Olvass el minden releváns fájlt:
+- AI-ctx/sum.txt, AI-ctx/process.md
+- AI-ctx/modes/audit/accepted.txt
+- docs/AQ_Protocol_Canonical_Manifest.md
+- loader/src/aqKeyring.js, loader/src/aqGateApi.js, loader/src/aqGateRender.js
+- loader/src/aqProtocolBus.js, loader/src/aqStorage.js, loader/src/aqAssetFetch.js
+- loader/src/aqCidBaseConfig.js, loader/src/aqEnv.js
+- server/aqAuth.js, server/aqData.js, server/aqServer.js
+
+Keress biztonsági problémákat:
+- Trust boundary sértések (seed, signing, kulcs-map hozzáférés)
+- Kulcskezelés hibák: raw seed kiszivárgás, nem megfelelő törlés, memória-cache visszaélés
+- postMessage protokoll: origin validálás, üzenet-hamisítás lehetősége
+- Server oldal: autentikáció bypass, ownership logika hibák, path traversal, injection
+- iframe sandbox: escape lehetőségek, privilege escalation
+- CID/RPC integritás: adat-manipulálás lehetősége a fetchelési láncban
+- Protokoll invariáns sértések (Manifest alapján)
+
+Az `accepted.txt`-ben lezárt döntéseket ne hozd fel — kivéve ha a kód már nem egyezik a döntéssel.
+
+Findings formátum:
+F## [🔴/🟡/🟢] [security] — [rövid cím]
+Érintett: [fájl:sor]
+Leírás: [mit találtál, miért probléma, mi a lehetséges támadási vektor]
 
 Ne adj javítási kódot. Csak azonosítsd a problémákat. Listában add vissza az összes findinget.
 ---

@@ -230,6 +230,38 @@ CLAUDE.md szöveges leírással egészítheti ki.
 
 **DEVp subagent scope:** forrás fájlokba írhat közvetlenül (saját könyvtár + érintett src). A főagent kizárólag `output/summary.md`-t olvas vissza — ha ezt kihagyja, a karmester szerep elveszik.
 
+**Karpathy 3-réteg alkalmazása (rögzítve):**
+
+Loop zárása verifier réteggel:
+```
+Orchestrator → spec (task.md) → Execution subagent
+                                        ↓
+                               output/summary.md
+                                        ↓
+                               Verifier subagent
+                                  ↓         ↓
+                               PASS        FAIL
+                                 ↓           ↓
+                            document    refine spec → új körözés
+```
+
+- **task.md formátum:** elfogadási kritériumok ("Kész ha: X, Y, Z"), nem leírás — verifier ez ellen ellenőriz
+- **Verifier output:** `STATUS: pass|fail` + `REASON: ...`
+- **config.json bővítés:** `scope` mező — mely fájlokhoz nyúlhat a subagent
+
+**Modell-stratégia (rögzítve):**
+
+| Réteg | Modell | Indok |
+|---|---|---|
+| Orchestrator | Sonnet 4.6 | Alapértelmezett |
+| Execution — egyszerű | Sonnet 4.6 | Sebesség + ár |
+| Execution — komplex, multi-fájl | Opus 4.8 | Csak indokolt esetben |
+| Verifier — kód | Script (nincs modell) | Determinisztikus |
+| Verifier — doksi/terv | M3 (MiniMax) | Más token-pool; CC-ből natívan fut |
+| AUDIT — security | Mythos / Fable 5 | Generációs ugrás security területen |
+
+Elvek: minimális token-fogyasztás, környezetterhelés csökkentése, token-pool szétválasztás (Claude + M3). Mythos/Fable 5 dedikált audit eszköz, nem általános subagent.
+
 SETUP módban implementálandó (gitignore kész, CLAUDE.md bővítés, process.md handoff formátum).
 
 ### Docs protokoll-alapokra + URL-alapú subagent kommunikáció

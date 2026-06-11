@@ -21,7 +21,7 @@ import {
 import { setLocked, isLocked } from "./aqProtocolBus.js";
 import { overlayShowLocked, overlayHide } from "./aqIframe.js";
 import { aqProtocolStorageGet } from "./aqStorage.js";
-import { seedExists, sessionLoad, isSeedUnlocked } from "./aqKeyring.js";
+import { seedExists, isSeedUnlocked } from "./aqKeyring.js";
 import { teardownGateDao } from "./aqGateRender.js";
 
 const rpcUrls = parseRpcConfig(conf.rpc, devMode);
@@ -59,8 +59,7 @@ window.aqSeedGenComplete = async function aqSeedGenComplete() {
 	try {
 		setLocked(true);
 		overlayShowLocked(isLocked);
-		const sessionActive = isSeedUnlocked() || await sessionLoad();
-		if (sessionActive) {
+		if (isSeedUnlocked()) {
 			teardownGateDao();
 		} else {
 			await renderGatePage(); // defaultPage
@@ -93,9 +92,8 @@ window.aqSeedGenComplete = async function aqSeedGenComplete() {
 				return;
 			}
 
-			// Normál flow: session check → gate kihagyva ha megvan, egyébként auth.
-			const sessionActive = isSeedUnlocked() || await sessionLoad();
-			if (!sessionActive) {
+			// Normál flow: gate kihagyva ha seed unlocked (memóriában), egyébként auth.
+			if (!isSeedUnlocked()) {
 				await loadGateDao(gateName, gateEntry);
 			} else if (devMode) {
 				await loadGateCfgOnly(gateEntry);

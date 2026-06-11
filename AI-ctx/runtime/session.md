@@ -504,6 +504,65 @@
 - Guide §12–13 helyén: utalás az új fájlra
 - `file_catalog.md`: új `doc` bejegyzés
 
+## 2026-06-11 — AUDIT: Fable 5 security audit tárgyalás + F01 javítás
+
+**17 finding tárgyalva:**
+- F01 🔴 javítva: `sessionSave`/`sessionLoad` + `aqSession` DB eltávolítva (aqKeyring.js, aqProtocolLoader.js, aqHostMenu.js) — raw seed plaintext session tárolás szándékolatlan volt; a jelszó/bio az unlock mechanizmus, nem "bejelentkezés"; page reload után seed locked marad (helyes)
+- F02–F17: elfogadva — Gate trusted (host-kontextus szándékos), WEB2 dev szerver korlátok (whitelist véd), böngésző-belső timing, null origin redundancia
+
+**accepted.txt bővítve:** Gate host-kontextus, whitelist pontosítás, WEB2 szerver biztonsági korlátok
+
+---
+
+## 2026-06-10 — PLAN: Karpathy method, modell-stratégia, Fable 5 security audit teszt
+
+**Karpathy 3-layer method (Loopy Era / LLM Wiki):**
+- Layer 1 — Spec: task.md = elfogadási kritériumok ("Kész ha: X"), nem leírás
+- Layer 2 — Verifier: automatikus ellenőrző; zárja a loopot; nélküle nem autonóm az iteráció
+- Layer 3 — Environment: agent-ctx/<id>/ struktúra + scope deklaráció config.json-ban
+- AQ orchestrator gap: verifier réteg hiányzott — pótolva a tervben
+- state.md frissítve: §Orchestrator — Karpathy 3-réteg + loop diagram + task.md formátum
+
+**Modell-stratégia (rögzítve state.md-ben):**
+| Réteg | Modell |
+|---|---|
+| Orchestrator | Sonnet 4.6 |
+| Execution — egyszerű | Sonnet 4.6 |
+| Execution — komplex | Opus 4.8 |
+| Verifier — kód | Script (nincs modell) |
+| Verifier — doksi/terv | M3 (MiniMax) — más token-pool |
+| AUDIT — security | Mythos / Fable 5 |
+
+Elvek: token-pool szétválasztás (Claude + M3), minimális fogyasztás, környezettudatosság. Fable 5 = dedikált audit eszköz, nem általános subagent.
+
+**Mythos / Fable 5:**
+- Anthropic modellje (nem más gyártó); megjelent: 2026-04-08 preview, 2026-06-09 Fable 5 (general)
+- Generációs ugrás security területen (SWE-bench 93.9%)
+- Nehezebb mint Opus → alapértelmezettként nem használjuk; audit dedikált eszköz
+
+**Nostr HKDF — AQ relevancia:**
+- NIP-44 (ECDH + HKDF): közvetlen precedens a tervezett PWA-to-PWA P2P kommunikációhoz (REL réteg)
+- Domain-separated salt ("nip44-v2" mintára "aqprotocol-v1") — hiányzik AQ-ban, security audit tárgya
+- NIP-06 (BIP-39 + BIP-32): kevésbé releváns — AQ WebAuthn-PRF-et használ, nem mnemonicot
+- HKDF explicitség aqKeyring.js-ben: ellenőrizendő (seed → wallet lépésben van-e formális KDF)
+
+**audit/process.md bővítés:**
+- Security audit típus hozzáadva (Fable 5 subagent, `model: "fable"`)
+- Shortcut: "security audit ultrathink"
+- Prompt template: trust boundary, kulcslevezetés, postMessage, server, iframe, CID/RPC integritás
+
+**Fable 5 security audit teszt (_fable_test/):**
+- 17 finding: 4 🔴, 9 🟡, 4 🟢 — 23 tool use, ~4 perc
+- Legsúlyosabb lánc: F02 (Gate host-kontextusban fut) + F01 (raw seed plaintext IndexedDB) + F05 (nincs CID-integritás ellenőrzés)
+- Kritikusak: F01 raw seed plaintext session store, F02 Gate nem sandboxolt, F03 ownership elfoglalás, F04 aláírás-replay (body nincs aláírva)
+- HKDF/salt/domain-separation: **Fable 5 nem találta meg** explicit prompt nélkül → igazolja a spec-alapú verifier szükségességét
+- findings.md: `_fable_test/findings.md`
+
+**Nyitott:**
+- _fable_test/ temp mappa: törölhető-e vagy marad referenciaként?
+- SETUP: orchestrator implementáció (CLAUDE.md, plan/process.md, agent-ctx struktúra, task.md template, verifier skeleton)
+- Fable 5 audit findings tárgyalása — mikor indul (AUDIT módban)?
+
 ## 2026-06-10 — PLAN: Orchestrator architektúra + MiniMax M3 teszt
 
 **MiniMax M3:**

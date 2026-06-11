@@ -10,6 +10,12 @@ Amit DOCSYNC során doksiba viszünk: törlendő innen. A doksi az elsődleges f
 - Az overlay tisztán implementációs UX elem. **Soha nem válik normatívvá vagy protokoll-elemmé.**
   (Többi pont Guide/Manifest-ben dokumentált.)
 
+## Gate host-kontextusban fut (security audit döntés)
+
+- A Gate DAO JS a host kontextusban fut (nem sandboxolt iframe) — ez szándékos.
+- A Gate protokoll-szintű, trusted, csak auditált tartalom kerülhet bele.
+- A sandboxolás hiánya nem biztonsági rés, hanem az architektúra következménye.
+
 ## Felelősségi határok
 
 - A page felelős a saját bootjáért (`AQ_PAGE_READY`).
@@ -30,9 +36,17 @@ Amit DOCSYNC során doksiba viszünk: törlendő innen. A doksi az elsődleges f
 ## TokenId auto-claim és whitelist-védelem (audit-felvetés válasza)
 
 - A `setTokenCid` auto-claim minden tokenId-re érvényes (0, 1–99, 100+): ha nincs ownership bejegyzés, az első whitelisted writer megkapja az ownershipet.
+- A whitelist kizárólag manuálisan felvett megbízható wallet-eket tartalmaz — az auto-claim ezen belül biztonságos.
 - A 0–99 tartomány kód-szinten nincs külön védve — a védelmi vonal kizárólag a whitelist szűksége (WEB2 genesis kontextus).
 - WEB3-on az on-chain ownership mechanizmus adja a védelmet; kód-szintű enforcement ott tervezendő.
 - A genesis admin feladata: tokenId=0 (protokoll config) és tokenId=1 (gate DAO) explicit első írása — ez egyben ownership-foglalás.
+
+## WEB2 dev szerver biztonsági korlátok (security audit döntés)
+
+- Aláírás-replay kockázat (body nincs aláírva, nincs nonce) tudatosan elfogadott — WEB2 dev szerver scope, whitelist véd.
+- CORS `"*"` minden végponton: dev szerver, whitelist véd.
+- Nincs TLS a szerver szintjén: nginx proxy HTTPS-t biztosít.
+- mintToken lokális, nincs on-chain validáció: WEB3-ra tervezett.
 
 ## PWA bootstrap web2 szerver (tervezési döntés)
 

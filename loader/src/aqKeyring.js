@@ -1,5 +1,5 @@
 // aqKeyring.js
-// Seed tárolás + unlock + session + wallet deriváció + wallet store.
+// Seed tárolás + unlock + wallet deriváció + wallet store.
 // Kapu DAO az aqGateApi.seed.* és aqGateApi.wallet.* capability-ken keresztül éri el.
 
 import { devMode, isPwa } from "./aqEnv.js";
@@ -81,63 +81,6 @@ async function seedGetInternal() {
 // ---------------------------------------------------------------------------
 // Seed decrypt + unlock
 
-// ---------------------------------------------------------------------------
-// Session store (aqSession DB — logout = teljes IndexedDB törlés)
-
-const SESSION_DB_NAME    = "aqSession";
-const SESSION_DB_VERSION = 1;
-const SESSION_STORE_NAME = "session";
-const SESSION_KEY        = "current";
-
-let _sessionDbPromise = null;
-
-function openSessionDb() {
-	if (_sessionDbPromise) return _sessionDbPromise;
-	_sessionDbPromise = new Promise((resolve, reject) => {
-		const req = indexedDB.open(SESSION_DB_NAME, SESSION_DB_VERSION);
-		req.onupgradeneeded = () => {
-			const db = req.result;
-			if (!db.objectStoreNames.contains(SESSION_STORE_NAME))
-				db.createObjectStore(SESSION_STORE_NAME);
-		};
-		req.onsuccess = () => resolve(req.result);
-		req.onerror  = () => reject(req.error);
-	});
-	return _sessionDbPromise;
-}
-
-async function sessionSave() {
-	if (!_unlockedSeed) return;
-	const db = await openSessionDb();
-	await new Promise((resolve, reject) => {
-		const t   = db.transaction(SESSION_STORE_NAME, "readwrite");
-		const req = t.objectStore(SESSION_STORE_NAME).put(_unlockedSeed.buffer.slice(0), SESSION_KEY);
-		t.oncomplete = () => resolve();
-		t.onerror    = () => reject(t.error);
-		void req;
-	});
-}
-
-export async function sessionLoad() {
-	try {
-		const db = await openSessionDb();
-		const buf = await new Promise((resolve, reject) => {
-			const t   = db.transaction(SESSION_STORE_NAME, "readonly");
-			const req = t.objectStore(SESSION_STORE_NAME).get(SESSION_KEY);
-			req.onsuccess = () => resolve(req.result || null);
-			req.onerror   = () => reject(req.error);
-		});
-		if (!buf) return false;
-		_unlockedSeed = new Uint8Array(buf);
-		return true;
-	} catch {
-		return false;
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Seed decrypt + unlock
-
 let _unlockedSeed = null;
 
 function b64decode(s) {
@@ -181,13 +124,11 @@ export async function seedUnlock(password) {
 	const record = await seedGetInternal();
 	if (!record) throw new Error("[AQ] seedUnlock: no seed stored");
 	_unlockedSeed = await decryptRecord(record, password);
-	sessionSave().catch(() => {});
 }
 
 export function seedActivate(rawBytes) {
 	if (!(rawBytes instanceof Uint8Array)) throw new Error("[AQ] seedActivate: Uint8Array required");
 	_unlockedSeed = rawBytes;
-	sessionSave().catch(() => {});
 }
 
 export function seedGetRaw() {

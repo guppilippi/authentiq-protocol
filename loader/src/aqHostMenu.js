@@ -359,13 +359,13 @@ export function initHostMenu() {
 		// --- Clear IndexedDB ---
 		panel.querySelector("#aq-hm-clear-item").addEventListener("click", async () => {
 			openDialog("clear", "Clear IndexedDB",
-				'<div class="aq-hm-none" style="margin-bottom:4px">Törli az összes helyi adatot (seed, session, storage). Visszavonhatatlan.</div>' +
+				'<div class="aq-hm-none" style="margin-bottom:4px">Törli az összes helyi adatot (seed, storage). Visszavonhatatlan.</div>' +
 				'<button class="aq-hm-run" id="aq-hm-run" style="background:#8b2020">Törlés</button>'
 			);
 			dialog.querySelector("#aq-hm-run").addEventListener("click", async () => {
 				try {
 					const dbs = await indexedDB.databases?.() ??
-						[{ name: "aqSeed" }, { name: "aqSession" }, { name: "aqProtocol" }];
+						[{ name: "aqSeed" }, { name: "aqProtocol" }];
 					await Promise.all(dbs.map(({ name }) =>
 						new Promise((res, rej) => {
 							const r = indexedDB.deleteDatabase(name);
