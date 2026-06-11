@@ -1,14 +1,11 @@
 import { createServer } from "node:http";
-import { resolveDataRoot, requireDir, readBody, logRequest, logStartup, DAO_CONTRACT } from "./util.js";
+import { resolveDataRoot, requireDir, readBody, logRequest, logStartup, DAO_CONTRACT, CID_RE, TOKENID_RE, parseEthCallTokenId } from "./util.js";
 import { initData, isWhitelisted, mintToken, setTokenCid, storeAsset, readBlob, readTokenCid } from "./aqData.js";
 import { checkTimestamp, recoverWallet, msgMintToken, msgSetSwarmHash, msgUploadAsset } from "./aqAuth.js";
 
-const PORT        = Number(process.env.AQ_PORT) || 8083;
-const LABEL       = "AQS";
-const SEL_GET     = "0xcc2fb628";
-const TOKENID_RE  = /^\d+$/;
-const CID_RE      = /^[0-9a-f]{64}$/i;
-const MAX_UPLOAD  = Number(process.env.AQ_MAX_UPLOAD) || 10 * 1024 * 1024;
+const PORT       = Number(process.env.AQ_PORT) || 8083;
+const LABEL      = "AQS";
+const MAX_UPLOAD = Number(process.env.AQ_MAX_UPLOAD) || 10 * 1024 * 1024;
 
 const dataRoot = resolveDataRoot(import.meta.url);
 requireDir(dataRoot, "data root");
@@ -53,7 +50,12 @@ const server = createServer(async (req, res) => {
 	}
 
 	// GET /cid/<hash>
-	if (method === "GET" && path.startsWith("/cid/")) {
+	if (path.startsWith("/cid/")) {
+		if (method !== "GET") {
+			res.writeHead(405); res.end();
+			logRequest(LABEL, method, url, 405);
+			return;
+		}
 		const cid = path.slice(5).toLowerCase();
 		if (!CID_RE.test(cid)) {
 			res.writeHead(400); res.end();
@@ -118,31 +120,13 @@ const server = createServer(async (req, res) => {
 		switch (rpcMethod) {
 
 			case "eth_call": {
-				if (!Array.isArray(params) || !params[0]) {
-					rpcErr(res, id, -32602, "invalid params");
-					logRequest(LABEL, method, url, 200, "(invalid params)");
+				const parsed = parseEthCallTokenId(params);
+				if (!parsed.ok) {
+					rpcErr(res, id, parsed.code, parsed.message);
+					logRequest(LABEL, method, url, 200, `(${parsed.message})`);
 					return;
 				}
-				const call = params[0];
-				const to   = String(call.to   || "").toLowerCase();
-				const data = String(call.data || "").toLowerCase();
-				if (to !== DAO_CONTRACT) {
-					rpcErr(res, id, -32602, "unknown contract: " + to);
-					logRequest(LABEL, method, url, 200, `(unknown contract ${to})`);
-					return;
-				}
-				if (!data.startsWith(SEL_GET)) {
-					rpcErr(res, id, -32602, "unknown selector");
-					logRequest(LABEL, method, url, 200, "(unknown selector)");
-					return;
-				}
-				const tokenIdHex = data.slice(SEL_GET.length);
-				if (!/^[0-9a-f]{64}$/.test(tokenIdHex)) {
-					rpcErr(res, id, -32602, "invalid data length");
-					logRequest(LABEL, method, url, 200, "(invalid data)");
-					return;
-				}
-				const tokenId = BigInt("0x" + tokenIdHex).toString(10);
+				const { tokenId } = parsed;
 				const cid = await readTokenCid(tokenId);
 				if (cid === null) {
 					rpcOk(res, id, "0x");

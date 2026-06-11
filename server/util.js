@@ -57,7 +57,24 @@ export function logRequest(label, method, url, status, extra) {
 	console.log(`[${ts}] ${label} ${method} ${url} → ${status}${tail}`);
 }
 
-export const DAO_CONTRACT = "0x64521be8d93483f5a41c40c21176137aed65296d";
+export const DAO_CONTRACT    = "0x64521be8d93483f5a41c40c21176137aed65296d";
+export const CID_RE          = /^[0-9a-f]{64}$/i;
+export const TOKENID_RE      = /^\d+$/;
+export const SEL_getSwarmHash = "0xcc2fb628";
+
+// eth_call tokenId parsing. Returns {ok:true, tokenId} or {ok:false, code, message}.
+export function parseEthCallTokenId(params) {
+	if (!Array.isArray(params) || !params[0]) return { ok: false, code: -32602, message: "invalid params" };
+	const call = params[0];
+	const to   = String(call.to   || "").toLowerCase();
+	const data = String(call.data || "").toLowerCase();
+	if (to !== DAO_CONTRACT) return { ok: false, code: -32602, message: "unknown contract: " + to };
+	if (!data.startsWith(SEL_getSwarmHash)) return { ok: false, code: -32602, message: "unknown selector" };
+	const tokenIdHex = data.slice(SEL_getSwarmHash.length);
+	if (!/^[0-9a-f]{64}$/.test(tokenIdHex)) return { ok: false, code: -32602, message: "invalid data length" };
+	const tokenId = BigInt("0x" + tokenIdHex).toString(10);
+	return { ok: true, tokenId };
+}
 
 // Egysoros startup log.
 export function logStartup(label, port, dataDir) {

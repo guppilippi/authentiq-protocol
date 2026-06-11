@@ -4,6 +4,13 @@ Kérésre olvasandó. Automatikusan nem töltődik be.
 
 ---
 
+## 2026-06-11 — DEVs: Fable 5 audit kódjavítások — F18
+
+- **F18**: `server/util.js` — `CID_RE` `{64}`, `TOKENID_RE`, `SEL_getSwarmHash`, `parseEthCallTokenId()` exportálva.
+- **F18**: `server/cidServer.js` — `CID_RE` `{64,128}` → util.js import (`{64}`); local def törölve.
+- **F18**: `server/rpcServer.js` — import frissítve; lokális `CID_RE`/`TOKENID_RE`/`SEL_getSwarmHash`/`DAO_CONTRACT_LC` törölve; `parseEthCallTokenId` használata; 405 fix non-POST `/rpc`-re; redundáns `cid.length !== 64` check törölve.
+- **F18**: `server/aqServer.js` — import frissítve; lokális `CID_RE`/`TOKENID_RE`/`SEL_GET` törölve; `parseEthCallTokenId` az `eth_call` case-ben; 405 fix non-GET `/cid/`-re.
+
 ## 2026-06-11 — DEVp: Fable 5 audit kódjavítások — F03/F04/F15/F17
 
 - **F03**: `aqProtocolLoader.js` — halott `else if (devMode) loadGateCfgOnly(gateEntry)` ág eltávolítva; `loadGateCfgOnly` import törölve. Boot always calls `loadGateDao`. Guide §4.3/§16.1/§19.3 frissítve.

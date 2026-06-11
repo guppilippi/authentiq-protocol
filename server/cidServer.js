@@ -6,7 +6,7 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { resolveDataRoot, requireDir, logRequest, logStartup } from "./util.js";
+import { resolveDataRoot, requireDir, logRequest, logStartup, CID_RE } from "./util.js";
 
 const PORT = 8081;
 const LABEL = "CID";
@@ -16,8 +16,6 @@ const blobsDir = join(dataRoot, "blobs");
 requireDir(dataRoot, "data root");
 requireDir(blobsDir, "blobs dir");
 
-// CID validáció: hex 64..128 chars, csak [0-9a-f].
-const CID_RE = /^[0-9a-f]{64,128}$/i;
 
 const server = createServer(async (req, res) => {
 	const url = req.url || "";
