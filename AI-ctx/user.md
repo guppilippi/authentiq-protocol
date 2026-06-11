@@ -16,6 +16,7 @@ Minden módban betöltődik. A kommunikáció és együttműködés személyre s
 ## Munkastílus
 
 - Windows Terminal, fullscreen (Alt+Enter), Claude Code CLI
+- Screenshot: Shift+Ctrl+PrtScr → Alt+V a chat inputban (kép direktben beillesztve). Ne futtass screenshotthoz scriptet vagy inline commandot.
 - Architektúra és következmény-lánc előbb, implementáció csak megerősítés után
 - Iteratív: egy lépés, megnézzük, következő — nem ugrik előre
 - Tesztelés valódi adattal, valódi eszközzel — nem mock

@@ -37,6 +37,8 @@ Jelzés a felhasználónak: `[title] Ctrl+V + Enter`
 - Diff csak felhasználói válasz után küldhető.
 - Fájlokba nem kerülnek "volt X, most Y" bejegyzések — ezek a `runtime/changelog.md`-be mennek.
 - Kérdésre csak információ, nem döntési javaslat. Tervezési döntést, megoldást, javaslatot csak explicit felkérésre hoz. HIBÁNAK minősül, ha kérés nélkül helyettesíti a felhasználó döntéshozatalát.
+- Ha az utasítás konkrét szöveget + célpontot tartalmaz (pl. "írd bele X-et a state.md-be"): azonnal cselekedj, ne kérj megerősítést, ne jelezd előre.
+- Ne hozz létre új `.ps1` fájlt egyszeri vagy alkalmi művelethez — inline futtatás preferált. Script fájl csak visszatérő, önálló műveletnek való.
 
 ---
 
@@ -110,6 +112,8 @@ Kérésre Claude nyitja az új tabot (encoded command, lásd `modes/setup/proces
 
 Kulcspontoknál (döntés, témaváltás, fontos megállapítás) frissítendő a `runtime/session.md`. Crash recovery és folytatás alapja.
 
+Workflow, projekt és feedback szabályok az `AI-ctx/` fájlokba kerülnek (gitelt, minden sessionben betöltődik) — nem a Claude memory fájlokba (nem gitelt, nem megbízható).
+
 ---
 
 ## Session zárás
@@ -119,6 +123,15 @@ Ha a session lezárul (felhasználó jelzi, vagy Claude `[mód-javaslat]` / `[mo
 1. Volt-e új kommunikációs minta, preferencia, fejlesztői szokás ami még nincs `user.md`-ben?
 2. Ha igen: `AI-ctx/user.md` bővítése — csak ami hiányzik vagy pontosítható, duplikálás nélkül
 3. `runtime/session.md` kulcspontok frissítése (ha még nem frissült)
+
+**Git push = session lezárható adatvesztés nélkül.**
+
+Kötelező sorrend git előtt:
+1. Összes módosított fájl kiírva (kód, doksi, AI-ctx)
+2. Session close fájlok frissítve (`session.md`, `state.md`, `user.md` ha kell)
+3. Összefoglaló a felhasználónak — jóváhagyás után git add + commit + push
+
+Git push után a session azonnal zárható.
 
 ---
 

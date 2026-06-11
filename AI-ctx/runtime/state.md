@@ -57,13 +57,13 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 
 ### Biztonsági rétegek (aqKeyring)
 
-- `seedUnlock(password?)`: nincs kontextus-korlát — jelszó/WebAuthn validál, `_unlockedSeed` cache + session auto-save
-- `seedActivate(rawBytes)`: seedGen után közvetlen aktiválás (re-decrypt nélkül) + session save
+- `seedUnlock(password?)`: nincs kontextus-korlát — jelszó/WebAuthn validál, `_unlockedSeed` memória-cache
+- `seedActivate(rawBytes)`: seedGen után közvetlen aktiválás (re-decrypt nélkül) — csak memóriában
 - `seedGetRaw()`: `isPwa || devMode` — raw seed és aláírás csak megbízható kontextusban
 - `getWalletAddresses()`: nincs korlát — `_unlockedSeed`-ből derivál, cím nem érzékeny
-- Session (aqSession DB): raw seed tárolás — logout = teljes IndexedDB törlés
-- `isSeedUnlocked()`: szinkron memória-check (race condition fix)
-- boot + aqSeedGenComplete: `isSeedUnlocked() || sessionLoad()` — memória-állapot elsőbbséget kap; session aktív esetén `teardownGateDao()` explicit hívás
+- `isSeedUnlocked()`: szinkron memória-check; page reload után false (seed locked marad)
+- boot + aqSeedGenComplete: `isSeedUnlocked()` — ha false → gate auth fut; session aktív esetén `teardownGateDao()`
+- aqSession DB eltávolítva: raw seed plaintext tárolás szándékolatlan volt; jelszó/bio = unlock mechanizmus, nem session
 
 ### Hamburger menü architektúra
 
