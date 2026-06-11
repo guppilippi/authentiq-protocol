@@ -157,7 +157,7 @@ Két változata:
 **Közösségi DAO** (community DAO)
 - Identitás DAO-k szerveződik tagsággal (Shamir-szilánkokkal).
 - Funkcionalitást építhet — ekkor lesz hitelessége.
-- **Minden nem-protokoll, nem-kapu funkció DAO közösségi DAO**, akár egyetlen taggal is (de a valódi közösségi működéshez minimum 3 tag szükséges).
+- **Minden nem-protokoll, nem-kapu funkció DAO közösségi DAO**. Minimum 3 taggal rendelkezik (Shamir-szilánk elosztás miatt — 2 tag recovery-képtelen).
 
 ### Tag és fogyasztó
 
@@ -202,7 +202,7 @@ Minden DAO a saját lokális CID-jeiért felel, a GC DAO-szinten működik.
 
 ## 12. Távoli ref mint élő hivatkozás
 
-A `refs` levél kétféle lehet: **lokális** (saját CID/path) vagy **távoli** (`{tokenName}` objektum, amely egy másik funkció DAO-ra mutat). A hívó DAO config `tokens` és `contracts` map-je tartalmazza a feloldáshoz szükséges adatokat: `tokenName` → `tokens[tokenName]` → `contracts[contractName]`. A távoli ref nem pillanatkép, hanem futásidejű feloldás.
+A `refs` levél kétféle lehet: **lokális** (saját CID/path) vagy **távoli** (amely egy másik funkció DAO-ra mutat). A feloldás futásidejű — nem pillanatkép. Az implementációs részletek → lásd [Implementation Guide](AQ_Protocol_Implementation_Guide.md) §6.1.
 
 Egy távoli ref a hivatkozott DAO **aktuális** állapotát oldja fel. Ha a hivatkozott DAO változik, a következő feloldás az új állapotot adja.
 
@@ -218,7 +218,7 @@ Az `imports` mint külön config-szekció megszűnt: a külső DAO hivatkozás a
 
 Az entitások és relációk együttese egy **kontextusgráf** (CTXG), az adott értelmezési keret teljes rajza. A korábban "flow" néven ismert folyamatba szervezés a kontextusgráf egy speciális esete (lineáris, vagy elágazásos nem-lineáris).
 
-A "bogyó" koncepció a legkisebb értelmezhető funkcionális egységre utal: bemenet → feldolgozás → kimenet vagy hiba. Ma ezt egyszerűen entitásnak (DAO-nak) nevezzük; a "bogyó" terminológia a korai koncepcióalkotás maradványa, szinonimaként használható.
+A "bogyó" koncepció a legkisebb értelmezhető funkcionális egységre utal: bemenet → feldolgozás → kimenet vagy hiba. Építkezési elv, nem DAO szinonimája — a terminológia a korai koncepcióalkotásból maradt (lásd Glossary).
 
 A komplexitás izolálása a cél: egy önmagában kis entitás kevés hibalehetőséget képvisel, a nagyobb funkciók entitások kontextusgráfba szervezésével épülnek fel.
 
@@ -326,7 +326,7 @@ Bizonyos műveletek **kritikus lépésként** vannak jelölve. Ezeken a loader m
 
 ## 20. Közösségi minimum tagság
 
-A közösségi DAO-knak **minimum tagszámot** kell teljesíteniük a funkcionalitásukhoz. A minimum **függ a korszaktól és a tagok szabadsági fokától**.
+A **közösségi identitás DAO**-knak minimum tagszámot kell teljesíteniük (Shamir-szilánk elosztás miatt); az egyéni identitás DAO definíció szerint egyszemélyes. A minimum **függ a korszaktól és a tagok szabadsági fokától**.
 
 **Elv:**
 - Minél magasabb a szabadsági fok, annál kevesebb tag elég (a technológiai védelem pótolja a közösségi redundanciát).

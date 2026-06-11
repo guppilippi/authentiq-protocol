@@ -169,7 +169,7 @@ A boot flow lépései:
 9. **Conf freeze + DOM hygiene**: `Object.freeze(conf)` és `Object.freeze(protocolCfg)`. Az `AQ_CONF` script tag és a saját boot script tag eltávolítva.
 10. **Loader script injekció** (`appendChild`, cél: `document.head || documentElement`) — a script ettől a ponttól fut; a freeze a futás előtt megtörténik. (A boot script `<body>`-ban fut, DOM ezért kész.)
 
-- bootstrap gate: nem-localhost origin esetén path-alapú loader hivatkozás (`loader.path`) **tiltott** (defense-in-depth: a `validateLocalRef` az `aqBoot.js`-ben non-devMode-ban dobja a path-ágat).
+- bootstrap gate: nem-localhost origin esetén path-alapú loader hivatkozás (`loader.path`) **tiltott** (defense-in-depth: az `aqBoot.js` non-devMode-ban inline ellenőrzéssel dobja a path-ágat).
 - Env guard: a `top !== self` és `hostOrigin !== "null"` ellenőrzés mindkét bundle-ben (boot és loader) lefut.
 
 ### 4.3. Loader boot flow (`aqProtocolLoader.js`)
@@ -186,7 +186,7 @@ A loader bundle indulásakor:
    - **Kapu DAO választás** (lásd §5.2).
    - **Seed ellenőrzés**: `seedExists()` — két ág:
      - **Nincs seed**: `loadGateDao(gateName, gateEntry, "seedGen")` indul, majd a loader **visszatér** (nem folytatja). A boot-folyamat a kapu DAO `window.aqSeedGenComplete()` callback-jén keresztül folytatódik (lásd §16).
-     - **Van seed / session aktív**: session aktív esetén devMode-ban `loadGateCfgOnly(gateEntry)` fut (renderelés nélkül, Publish Gate előfeltétele); `loadGateDao` csak nem-aktív session esetén. Majd ha `openTokenId` set: `loadContentDao(openTokenId)`. Végül: `initHostMenu()` (lásd §18).
+     - **Van seed**: `isSeedUnlocked()` ellenőrzés. Memóriában aktív seed esetén devMode-ban `loadGateCfgOnly(gateEntry)` fut (renderelés nélkül, Publish Gate előfeltétele), production-ban gate kihagyva; egyébként `loadGateDao` indul (auth prompt). Majd ha `openTokenId` set: `loadContentDao(openTokenId)`. Végül: `initHostMenu()` (lásd §18).
    - `setLocked(false)`, overlay elrejtés.
    - `aqSeedGenComplete` ágban szintén: ha `openTokenId` set: `loadContentDao`, majd `initHostMenu()`.
 
@@ -206,7 +206,7 @@ A DAO config:
 - `exports` (opcionális, lapos lista)
 - `pages` (kötelező)
 - `defaultPage` (kötelező)
-- opcionálisan `cidBase`, `rpc`, `cacheable`
+- opcionálisan `cidBase`, `rpc`
 
 A séma **implementációfüggő** és csak a referencia loaderre érvényes.
 
@@ -248,7 +248,7 @@ Ha a kiválasztott név **nem létezik** a `gates`-ben → hard fail (`"[AQ] gat
 
 ### 5.3. Kapu DAO betöltés (`loadGateDao`)
 
-A kapu DAO saját config-gal, refs-szel és pages-szel rendelkezik, **host-szinten renderelődik** — nem iframe-ben (lásd §5.4). Speciális storage namespace: `"gate:" + tokenId` (production) vagy `"gate:" + path` (devMode); stabil a tartalom-frissítések alatt.
+A kapu DAO saját config-gal, refs-szel és pages-szel rendelkezik, **host-szinten renderelődik** — nem iframe-ben (lásd §5.4). Speciális storage namespace: `"gate:" + (tokenId ?? path)` — tokenId elsőbbséget élvez ha rendelkezésre áll, path fallback; stabil a tartalom-frissítések alatt.
 
 A `loadGateDao(gateName, gateEntry, pageKey?)` flow:
 1. **DAO ref feloldás:**
@@ -466,7 +466,7 @@ A protokoll DAO-scope-olt text storage capability-t biztosít IndexedDB alapon, 
 
 - Storage namespace = az aktuális DAO-hoz beállított `aqDaoNamespace` érték.
   - Sima DAO esetén: `"tokenId:" + tokenId` (production). DevMode path-ágban: a nyers path maga (pl. `/demo/json/aqDaoConfig.json`). Stabil a tartalom-frissítések alatt.
-  - Kapu DAO esetén: `"gate:" + tokenId` (production) vagy `"gate:" + path` (devMode). Stabil a tartalom-frissítések alatt.
+  - Kapu DAO esetén: `"gate:" + (tokenId ?? path)` — tokenId elsőbbséget élvez ha rendelkezésre áll, path fallback. Stabil a tartalom-frissítések alatt.
 - DAO váltás más namespace-re vált.
 - Azonos namespace-re visszatérés az adatokat változatlanul elérhetővé teszi.
 - A storage modul-szintű állapota (namespace, IndexedDB connection promise) a loader bundle-ben él. Más bundle-be importálva (pl. boot) a state nem osztott — minden bundle saját példányt kap.
@@ -484,7 +484,7 @@ Sima DAO **nem fér hozzá** a `_protocol` namespace-hez.
 
 Kulcs formátum (host oldalon):
 
-daoRef + "\n" + storageName
+namespace + "\n" + name
 
 ### Adatmodell (node séma)
 
@@ -707,7 +707,7 @@ A seed-gen flow a boot során fut le, ha a felhasználónak még nincs seedje.
 A loader boot végén (DOM-ready, kapu DAO választás után) a `seedExists()` eredménye alapján két ág (lásd §4.3):
 
 - **Nincs seed**: `loadGateDao(gateName, gateEntry, "seedGen")` → a kapu DAO `pages.seedGen` page-e töltődik be host-szinten. A loader **visszatér és vár** — a folytatás `window.aqSeedGenComplete()` hívásakor történik.
-- **Van seed / session aktív**: session aktív esetén devMode-ban `loadGateCfgOnly(gateEntry)` fut (render nélkül); `loadGateDao` csak nem-aktív session esetén. Majd ha `openTokenId` set: `loadContentDao(openTokenId)`.
+- **Van seed**: `isSeedUnlocked()` ellenőrzés. Memóriában aktív seed esetén devMode-ban `loadGateCfgOnly(gateEntry)` fut (render nélkül), production-ban gate kihagyva; egyébként `loadGateDao` indul (auth prompt). Majd ha `openTokenId` set: `loadContentDao(openTokenId)`.
 
 ### 16.2. `window.aqSeedGenComplete`
 
@@ -715,9 +715,9 @@ A loader a boot során (nincs-seed ág) regisztrál egy globális `window.aqSeed
 
 `aqSeedGenComplete` lefutásakor:
 1. `setLocked(true)`, overlay megjelenítés.
-2. Session check: `isSeedUnlocked() || sessionLoad()`.
-   - Session aktív → `teardownGateDao()` (seed-gen UI DOM-ból eltávolítva).
-   - Session nem aktív → `renderGatePage()` (kapu DAO `defaultPage`-re vált).
+2. Seed check: `isSeedUnlocked()`.
+   - Seed aktív → `teardownGateDao()` (seed-gen UI DOM-ból eltávolítva).
+   - Seed nem aktív → `renderGatePage()` (kapu DAO `defaultPage`-re vált).
 3. Ha `openTokenId` set: `loadContentDao(openTokenId)` — tartalmi DAO betöltése.
 4. `initHostMenu()`.
 5. `setLocked(false)`, overlay elrejtés.
@@ -864,7 +864,7 @@ Minden módban aktív. `getWalletAddresses()` (`aqKeyring.js`) fut — seed unlo
 
 ### 18.7. Clear IndexedDB (devMode)
 
-Összes IndexedDB törlése (`aqSeed`, `aqSession`, `aqProtocol`). Visszavonhatatlan. Utána `location.reload()`.
+Összes IndexedDB törlése (`aqSeed`, `aqProtocol`). Visszavonhatatlan. Utána `location.reload()`.
 
 ### 18.8. processPathRefs (belső)
 
@@ -883,40 +883,30 @@ A `aqKeyring.js` tartalmaz minden seed és session funkciót. §15 a seed store-
 2. `decryptRecord(record, password)`:
    - `"webauthn-prf"`: `navigator.credentials.get` PRF extension → AES-GCM decrypt.
    - `"password"`: PBKDF2 (600 000 iter, SHA-256) → AES-GCM decrypt.
-3. Visszafejtett raw seed → `_unlockedSeed`.
-4. `sessionSave()` aszinkron háttérben (§19.2).
+3. Visszafejtett raw seed → `_unlockedSeed`. Az unlock után a seed csak memóriában él — oldal újratöltés után authentikáció szükséges.
 
-**`seedActivate(rawBytes)`** — seedGen flow közvetlen aktiválás (seed mentés után, re-decrypt nélkül). `Uint8Array` kötelező. `sessionSave()` aszinkron háttérben.
+**`seedActivate(rawBytes)`** — seedGen flow közvetlen aktiválás (seed mentés után, re-decrypt nélkül). `Uint8Array` kötelező.
 
 **`seedGetRaw()`** — szinkron; `isPwa || devMode` feltétel. `_unlockedSeed` referenciát adja vissza. Publish és deriválási műveletek hívják.
 
 **`isSeedUnlocked()`** — szinkron, memória-check (`_unlockedSeed !== null`). Race condition elkerülés az auth flow-ban.
 
-### 19.2. Session store (`aqSession`)
-
-Külön IndexedDB: `"aqSession"`, v1, `"session"` object store, kulcs: `"current"`. Raw seed `ArrayBuffer`-ként tárolódik — nem titkosítva. Védelmi szint: böngésző origin isolation.
-
-- **`sessionSave()`** — belső; `_unlockedSeed` → `ArrayBuffer` → IndexedDB.
-- **`sessionLoad()`** — `ArrayBuffer` visszaolvasás → `_unlockedSeed` beállítás → `true` / `false`.
-
-Logout = teljes IndexedDB törlés (§18.7 Clear IndexedDB).
-
 ### 19.3. Boot auth flow
 
 `aqProtocolLoader.js` normál boot ága (seed létezik):
 
-`isSeedUnlocked()` szinkron check elsőbbséget kap, majd `sessionLoad()` async következik. Három eset:
-- Session nem aktív: `loadGateDao` hívódik (auth prompt, `defaultPage`).
-- Session aktív, devMode: `loadGateCfgOnly` hívódik render nélkül (Publish Gate előfeltétele).
-- Session aktív, production: gate kihagyva.
+`isSeedUnlocked()` szinkron check. Három eset:
+- Seed nem aktív: `loadGateDao` hívódik (auth prompt, `defaultPage`).
+- Seed aktív, devMode: `loadGateCfgOnly` hívódik render nélkül (Publish Gate előfeltétele).
+- Seed aktív, production: gate kihagyva.
 
 Ezután ha `openTokenId` set: `loadContentDao`. Mindkét ágban: `initHostMenu()` a `finally` blokkban fut — betöltési hiba esetén is megjelenik.
 
 `aqSeedGenComplete` callback (seed-gen utáni ág):
 
-Session check (`isSeedUnlocked() || sessionLoad()`). Két eset:
-- Session aktív: `teardownGateDao()` (seed-gen UI DOM-ból eltávolítva).
-- Session nem aktív: `renderGatePage()` (kapu DAO `defaultPage`, auth prompt).
+Seed check (`isSeedUnlocked()`). Két eset:
+- Seed aktív: `teardownGateDao()` (seed-gen UI DOM-ból eltávolítva).
+- Seed nem aktív: `renderGatePage()` (kapu DAO `defaultPage`, auth prompt).
 
 Ezután ha `openTokenId` set: `loadContentDao`. `initHostMenu()` a `finally` blokkban fut — betöltési hiba esetén is megjelenik.
 
@@ -927,7 +917,7 @@ Ezután ha `openTokenId` set: `loadContentDao`. `initHostMenu()` a `finally` blo
 - JS blob URL revoke.
 - `_imageBlobUrls` lista teljes revoke (aq:// képek, §19.5).
 
-Hívódik: session-aktív boot ágban; kapu DAO JS-ből `gate.done()` hívásakor (auth flow befejezésekor).
+Hívódik: `aqSeedGenComplete` seed-aktív ágában; kapu DAO JS-ből `gate.done()` hívásakor (auth flow befejezésekor).
 
 ### 19.5. aq:// asset referencia séma
 
@@ -952,6 +942,6 @@ Csak gate DAO HTML-ben aktív. Tartalmi DAO (iframe) nem kap aq:// feldolgozást
 | `100+` | Sima DAO-k (`aqMintToken` innen indul) |
 
 - Gate DAO referencia tokenId: `"1"`.
-- DevMode-ban: gate entry `path` + `tokenId` párhuzamosan jelen lehet; namespace a `tokenId`-re épül (stabil).
+- DevMode-ban: gate entry `path` + `tokenId` párhuzamosan jelen lehet; namespace = `"gate:" + (tokenId ?? path)` — tokenId elsőbbséget élvez ha jelen van, path fallback.
 - Production-ban: csak `tokenId`.
 - Az 1–99 tartomány kód-szinten nem védett — a genesis admin írja a tokenId-ket explicit auto-claimmel; a védelmi vonal a whitelist szűksége (WEB2). WEB3-on on-chain ownership biztosítja a védelmet.

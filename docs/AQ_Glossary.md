@@ -23,7 +23,7 @@ Minden DAO vagy identitás DAO, vagy funkció DAO.
 | kapu DAO | gate DAO | — |
 | közösségi DAO | community DAO | — |
 
-A protokoll DAO az aqProtocol maga. A kapu DAO protokoll által auditált UI. Minden más funkció DAO egy közösségi DAO (akár egyetlen taggal is, de a praktikus minimum 3 tag).
+A protokoll DAO az aqProtocol maga. A kapu DAO protokoll által auditált UI. Minden más funkció DAO egy közösségi DAO (minimum 3 tag, Shamir-szilánk elosztás miatt).
 
 ## Struktúra
 
@@ -116,7 +116,7 @@ A protokoll nem kezel identitás DAO-ra vonatkozó kompromittáltság jelzést �
 
 **Szabadsági fok** (degrees of freedom) — identitás DAO tulajdonsága. A kompromittálhatóság fordított mértéke. Magas fok = nehezen kompromittálható. Logaritmikus 5 szintű skála nyitott felső véggel.
 
-**Hitelesség** (credibility) — funkció DAO tulajdonsága. A használatból és jelzésekből épül. Korszak-szorzókkal súlyozva, kanonikus képlet szerint bárhol determinisztikusan számítható. Nem monoton: csökkenhet hibajelzés hatására, visszavonáskor vagy javításkor visszanőhet.
+**Hitelesség** (credibility) — funkció DAO tulajdonsága. A használatból és jelzésekből épül. Korszak-szorzókkal súlyozva, kanonikus képlet szerint bárhol determinisztikusan számítható. Az aktuális érték csökkenhet hibajelzés hatására; a múltbeli értékek immutablek — hosszú távon csak nőhet.
 
 **Hasznosság** (utility) — funkció DAO mérőszáma. Használati adatok aggregálása.
 

@@ -4,6 +4,19 @@ Kérésre olvasandó. Automatikusan nem töltődik be.
 
 ---
 
+## 2026-06-11 — DOCSYNC: Full audit Fable 5 — F02/F06/F07/F08/F09/F10/F11/F12/F14/F16
+
+- **F02**: Guide §4.3/§16.1/§16.2/§18.7/§19.1/§19.3/§19.4 — session store (aqSession/sessionSave/sessionLoad) eltávolítva; §19.2 törölve. Seed csak memóriában él, reload után auth szükséges.
+- **F06**: Guide §5 — `cacheable` mező törölve az opcionális mezők listájából.
+- **F07**: Guide §5.3/§11.1/§19.6 — gate storage namespace: `"gate:" + (tokenId ?? path)` kanonikus forma, tokenId elsőbbséggel.
+- **F08**: Concepts §13 — bogyó definíció: "szinonimaként használható" sor törölve; építkezési elvként definiálva.
+- **F09**: Glossary "Hitelesség" — bővítve: múltbeli értékek immutablek, aktuális csökkenhet hibajelzésre.
+- **F10**: Concepts §9/§20, Glossary, Plan §17 — min 3 tag szabály DAO-típushoz kötve (közösségi identitás DAO); "akár egyetlen taggal is" törölve.
+- **F11**: Plan bevezető, §19.2–19.4, Pending — write szerver implementált; §19.2/19.3/19.4 → WEB2 Guide §2 referencia; POST /aq/token tervezett forma törölve; Pending: write szerver + ecrecover törölve.
+- **F12**: Plan §2.2/§14.3/§14.6/§19.1 + Concepts §12 — implementált tartalom → Guide/WEB2 Guide referencia; duplikációk eltávolítva.
+- **F14**: Guide §4.2 — `validateLocalRef` hivatkozás törölve; inline ellenőrzés leírva.
+- **F16**: Guide §11.2 — `daoRef + "\n" + storageName` → `namespace + "\n" + name`.
+
 ## 2026-06-08 — DOCSYNC: AQ_WEB2_Server_Guide.md létrehozva
 
 - Guide §12–13 tartalma → `docs/AQ_WEB2_Server_Guide.md` (§1 dev szerver, §2 write szerver)
