@@ -4,6 +4,13 @@ Kérésre olvasandó. Automatikusan nem töltődik be.
 
 ---
 
+## 2026-06-11 — DEVp: Fable 5 audit kódjavítások — F03/F04/F15/F17
+
+- **F03**: `aqProtocolLoader.js` — halott `else if (devMode) loadGateCfgOnly(gateEntry)` ág eltávolítva; `loadGateCfgOnly` import törölve. Boot always calls `loadGateDao`. Guide §4.3/§16.1/§19.3 frissítve.
+- **F04**: `aqProtocolLoader.js` — `seedGenFlow` flag hozzáadva; `initHostMenu()` nem hívódik a seed-gen ág `finally`-jában — csak a normál boot végén és `aqSeedGenComplete`-ben.
+- **F15**: `aqAssetFetch.js:28` — komment: `{rpc?, contract, tokenId}` → `{tokenName}`.
+- **F17**: `aqLoaderCore.js` — duplikált gate-entry feloldó blokk kiemelve `resolveGateEntry(gateEntry, caller)` helperbe; `loadGateCfgOnly` és `loadGateDao` egyaránt hívja.
+
 ## 2026-06-11 — DOCSYNC: Full audit Fable 5 — F02/F06/F07/F08/F09/F10/F11/F12/F14/F16
 
 - **F02**: Guide §4.3/§16.1/§16.2/§18.7/§19.1/§19.3/§19.4 — session store (aqSession/sessionSave/sessionLoad) eltávolítva; §19.2 törölve. Seed csak memóriában él, reload után auth szükséges.

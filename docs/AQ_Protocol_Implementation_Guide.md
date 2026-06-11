@@ -186,7 +186,7 @@ A loader bundle indulásakor:
    - **Kapu DAO választás** (lásd §5.2).
    - **Seed ellenőrzés**: `seedExists()` — két ág:
      - **Nincs seed**: `loadGateDao(gateName, gateEntry, "seedGen")` indul, majd a loader **visszatér** (nem folytatja). A boot-folyamat a kapu DAO `window.aqSeedGenComplete()` callback-jén keresztül folytatódik (lásd §16).
-     - **Van seed**: `isSeedUnlocked()` ellenőrzés. Memóriában aktív seed esetén devMode-ban `loadGateCfgOnly(gateEntry)` fut (renderelés nélkül, Publish Gate előfeltétele), production-ban gate kihagyva; egyébként `loadGateDao` indul (auth prompt). Majd ha `openTokenId` set: `loadContentDao(openTokenId)`. Végül: `initHostMenu()` (lásd §18).
+     - **Van seed**: `loadGateDao` indul (auth prompt). Majd ha `openTokenId` set: `loadContentDao(openTokenId)`. Végül: `initHostMenu()` (lásd §18).
    - `setLocked(false)`, overlay elrejtés.
    - `aqSeedGenComplete` ágban szintén: ha `openTokenId` set: `loadContentDao`, majd `initHostMenu()`.
 
@@ -707,7 +707,7 @@ A seed-gen flow a boot során fut le, ha a felhasználónak még nincs seedje.
 A loader boot végén (DOM-ready, kapu DAO választás után) a `seedExists()` eredménye alapján két ág (lásd §4.3):
 
 - **Nincs seed**: `loadGateDao(gateName, gateEntry, "seedGen")` → a kapu DAO `pages.seedGen` page-e töltődik be host-szinten. A loader **visszatér és vár** — a folytatás `window.aqSeedGenComplete()` hívásakor történik.
-- **Van seed**: `isSeedUnlocked()` ellenőrzés. Memóriában aktív seed esetén devMode-ban `loadGateCfgOnly(gateEntry)` fut (render nélkül), production-ban gate kihagyva; egyébként `loadGateDao` indul (auth prompt). Majd ha `openTokenId` set: `loadContentDao(openTokenId)`.
+- **Van seed**: `loadGateDao` indul (auth prompt). Majd ha `openTokenId` set: `loadContentDao(openTokenId)`.
 
 ### 16.2. `window.aqSeedGenComplete`
 
@@ -895,12 +895,7 @@ A `aqKeyring.js` tartalmaz minden seed és session funkciót. §15 a seed store-
 
 `aqProtocolLoader.js` normál boot ága (seed létezik):
 
-`isSeedUnlocked()` szinkron check. Három eset:
-- Seed nem aktív: `loadGateDao` hívódik (auth prompt, `defaultPage`).
-- Seed aktív, devMode: `loadGateCfgOnly` hívódik render nélkül (Publish Gate előfeltétele).
-- Seed aktív, production: gate kihagyva.
-
-Ezután ha `openTokenId` set: `loadContentDao`. Mindkét ágban: `initHostMenu()` a `finally` blokkban fut — betöltési hiba esetén is megjelenik.
+`loadGateDao` hívódik (auth prompt, `defaultPage`). Ezután ha `openTokenId` set: `loadContentDao`. `initHostMenu()` a `finally` blokkban fut — betöltési hiba esetén is megjelenik.
 
 `aqSeedGenComplete` callback (seed-gen utáni ág):
 

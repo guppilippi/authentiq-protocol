@@ -13,7 +13,7 @@ Data root: `/var/www/sftp/szoke/sftp/sftp/data/`
 
 **Funkcionális állapot:**
 - Seed létrehozás (jelszó / WebAuthn-PRF) → titkosítva IndexedDB-ben
-- Seed unlock → session aktiválás (aqSession IndexedDB) → reload után auto-bejelentkezés
+- Seed unlock → `_unlockedSeed` memóriában él → reload után authentikáció szükséges (aqSession eltávolítva)
 - Létrehozás után automatikus session
 - Gate DAO auth flow: nem PWA → csak jelszó; PWA → bio + jelszó; unlock → gate teardown
 - Host hamburger menü (mindig aktív): Wallet cím lista; devMode: Publish aqBoot.js, Publish Protocol, Publish Gate, Clear IndexedDB; prod: Fork DAO
@@ -62,7 +62,7 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 - `seedGetRaw()`: `isPwa || devMode` — raw seed és aláírás csak megbízható kontextusban
 - `getWalletAddresses()`: nincs korlát — `_unlockedSeed`-ből derivál, cím nem érzékeny
 - `isSeedUnlocked()`: szinkron memória-check; page reload után false (seed locked marad)
-- boot + aqSeedGenComplete: `isSeedUnlocked()` — ha false → gate auth fut; session aktív esetén `teardownGateDao()`
+- boot: `seedExists()` → van: `loadGateDao` (auth prompt); nincs: seed-gen flow, `aqSeedGenComplete`-ben `isSeedUnlocked()` → `teardownGateDao()` vagy defaultPage render
 - aqSession DB eltávolítva: raw seed plaintext tárolás szándékolatlan volt; jelszó/bio = unlock mechanizmus, nem session
 
 ### Hamburger menü architektúra
@@ -84,7 +84,6 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 
 - Ephemeral modal (position:fixed overlay)
 - Auth után: `gate.done()` → teardown
-- Session aktív esetén gate kihagyva
 - Újbóli megnyitás menüből: `loadGateDao` → CID cache-ből gyors
 
 ### Server reset (kész)
@@ -108,7 +107,7 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 
 - `getGateCfg()`, `getDaoCfg()` exportok elérhetők
 - `processPathRefs()`: path ref → upload → CID; kezeli: `loader`, `refs.*` mezőket (`boot` ág törölve — halott kód volt)
-- `loadGateCfgOnly()`: gate config betölt renderelés nélkül — devMode + session aktív esetén (Publish Gate előfeltétele)
+- `loadGateCfgOnly()`: gate config betölt renderelés nélkül — boot flow-ban nem hívódik (boot mindig `loadGateDao`-t hív); Publish Gate a memóriában lévő `gateCfg`-re támaszkodik (`getGateCfg()`)
 - devMode: Publish aqBoot.js (CID vágólapra), Publish Protocol (protokol config, gate `path` eltávolítva), Publish Gate (gate config), Clear IndexedDB
 - prod: Fork DAO (tartalom DAO → CID → tokenId: üres = új 100+, vagy meglévő ha wallet=owner)
 - `setTokenCid`: ownership auto-claim bármely tokenId-re első setkor (nem csak `"0"`)
@@ -167,8 +166,6 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 ---
 
 ## Tervezett refaktorok (következő DEVp)
-
-- **`resolveGateEntry` kiemelés**: `loadGateCfgOnly` és `loadGateDao` azonos ~10 soros blokkot tartalmaz (path/tokenId → daoRef + namespace). Triviális helper-kiemelés, csak ha más módosítás is érinti a területet.
 
 
 ## Ismert javítandók (AI workflow)

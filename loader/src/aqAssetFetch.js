@@ -25,7 +25,7 @@ async function fetchByCid(cid, cidBaseRaw) {
 //  - lokális objektum {cid, description}: globális aqCidBase-en
 //  - lokális objektum {path, description}: lokális dev (devMode)
 //  - resolved objektum {cid, cidBase?}: a megadott cidBase-en vagy globálison
-//  - távoli objektum {rpc?, contract, tokenId}: NEM jut be (resolve a loadercore-ben)
+//  - távoli objektum {tokenName}: NEM jut be (resolve a loadercore-ben)
 export async function fetchAssetBytes(assetRef) {
 	// Lokális objektum-ág ({cid, description} vagy {path, description})
 	if (isLocalRefObject(assetRef)) {

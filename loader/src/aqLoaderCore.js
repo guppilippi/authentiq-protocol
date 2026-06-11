@@ -330,21 +330,25 @@ async function _resolveGatePageAssets(pageKey) {
 	return { html, css, js, imageBlobUrls };
 }
 
+async function resolveGateEntry(gateEntry, caller) {
+	if (devMode && typeof gateEntry.path === "string") {
+		return {
+			daoRef:    gateEntry.path,
+			namespace: "gate:" + (gateEntry.tokenId ?? gateEntry.path),
+		};
+	}
+	if (typeof gateEntry.tokenId === "string") {
+		const rpcUrls = parseRpcConfig(conf?.rpc, devMode);
+		const cid = await resolveDaoCid(gateEntry.tokenId, rpcUrls);
+		return { daoRef: cid, namespace: "gate:" + gateEntry.tokenId };
+	}
+	throw new Error("[AQ] " + caller + ": entry must have tokenId or path");
+}
+
 // Kapu DAO config betöltése renderelés nélkül (devMode publish célra).
 export async function loadGateCfgOnly(gateEntry) {
 	if (!gateEntry || typeof gateEntry !== "object") throw new Error("[AQ] loadGateCfgOnly: invalid entry");
-	let daoRef, namespace;
-	if (devMode && typeof gateEntry.path === "string") {
-		daoRef    = gateEntry.path;
-		namespace = "gate:" + (gateEntry.tokenId ?? gateEntry.path);
-	} else if (typeof gateEntry.tokenId === "string") {
-		const rpcUrls = parseRpcConfig(conf?.rpc, devMode);
-		const cid = await resolveDaoCid(gateEntry.tokenId, rpcUrls);
-		daoRef    = cid;
-		namespace = "gate:" + gateEntry.tokenId;
-	} else {
-		throw new Error("[AQ] loadGateCfgOnly: entry must have tokenId or path");
-	}
+	const { daoRef, namespace } = await resolveGateEntry(gateEntry, "loadGateCfgOnly");
 	await _loadDaoConfigInternal(daoRef, namespace, true);
 }
 
@@ -352,22 +356,7 @@ export async function loadGateCfgOnly(gateEntry) {
 // pageKey: opcionális, melyik kapu page-et rendereljen. Default: gateCfg.defaultPage.
 export async function loadGateDao(gateName, gateEntry, pageKey) {
 	if (!gateEntry || typeof gateEntry !== "object") throw new Error("[AQ] loadGateDao: invalid entry");
-
-	let daoRef;
-	let namespace;
-	if (devMode && typeof gateEntry.path === "string") {
-		// devMode: path elsőbbséget élvez; ha van tokenId, azt használjuk namespace-nek (stabil)
-		daoRef    = gateEntry.path;
-		namespace = "gate:" + (gateEntry.tokenId ?? gateEntry.path);
-	} else if (typeof gateEntry.tokenId === "string") {
-		const rpcUrls = parseRpcConfig(conf?.rpc, devMode);
-		const cid = await resolveDaoCid(gateEntry.tokenId, rpcUrls);
-		daoRef    = cid;
-		namespace = "gate:" + gateEntry.tokenId;
-	} else {
-		throw new Error("[AQ] loadGateDao: entry must have tokenId or path");
-	}
-
+	const { daoRef, namespace } = await resolveGateEntry(gateEntry, "loadGateDao");
 	await _loadDaoConfigInternal(daoRef, namespace, true);
 	const gateAssets = await _resolveGatePageAssets(pageKey);
 	exposeGateApi();

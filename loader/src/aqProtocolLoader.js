@@ -4,8 +4,8 @@
 //   2. Kapu DAO választás (precedencia)
 //   3. Seed ellenőrzés
 //      - NINCS: kapu DAO seedGen page renderelés, várakozás (aqSeedGenComplete callback)
-//      - VAN: session aktív → gate kihagyva (production) / loadGateCfgOnly (devMode); egyébként loadGateDao
-//   4. openTokenId → loadContentDao; initHostMenu mindig fut (finally)
+//      - VAN: loadGateDao (auth prompt)
+//   4. openTokenId → loadContentDao; initHostMenu fut (nem seed-gen ágban)
 
 import "./aqEnv.js";
 import { devMode } from "./aqEnv.js";
@@ -15,7 +15,7 @@ import { parseRpcConfig } from "./aqRpcConfig.js";
 import { setAqRpcUrls } from "./aqAssetFetch.js";
 import { checkCidBaseSecurity } from "./aqCidBaseConfig.js";
 import {
-	loadGateDao, loadGateCfgOnly, renderGatePage, loadContentDao, cleanupOnPageHide,
+	loadGateDao, renderGatePage, loadContentDao, cleanupOnPageHide,
 	setProtocolCfg, getProtocolCfg,
 } from "./aqLoaderCore.js";
 import { setLocked, isLocked } from "./aqProtocolBus.js";
@@ -78,6 +78,7 @@ window.aqSeedGenComplete = async function aqSeedGenComplete() {
 	const boot = async () => {
 		setLocked(true);
 		overlayShowLocked(isLocked);
+		let seedGenFlow = false;
 		try {
 			const gateName = await pickGateName();
 			const gates = getProtocolCfg().gates;
@@ -88,21 +89,17 @@ window.aqSeedGenComplete = async function aqSeedGenComplete() {
 			if (!hasSeed) {
 				// Seed-gen flow: kapu DAO seedGen page renderelése, várakozás.
 				// A seed-gen page kódja a felhasználói flow végén meghívja window.aqSeedGenComplete()-t.
+				seedGenFlow = true;
 				await loadGateDao(gateName, gateEntry, "seedGen");
 				return;
 			}
 
-			// Normál flow: gate kihagyva ha seed unlocked (memóriában), egyébként auth.
-			if (!isSeedUnlocked()) {
-				await loadGateDao(gateName, gateEntry);
-			} else if (devMode) {
-				await loadGateCfgOnly(gateEntry);
-			}
+			await loadGateDao(gateName, gateEntry);
 			if (openTokenId) await loadContentDao(openTokenId);
 		} catch (e) {
 			console.error(e);
 		} finally {
-			initHostMenu();
+			if (!seedGenFlow) initHostMenu();
 			setLocked(false);
 			overlayHide();
 		}
