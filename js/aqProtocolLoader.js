@@ -7536,6 +7536,8 @@
   var AQ_PROTOCOL_NS = "_protocol";
   var aqDaoNamespace = "";
   var setAqDaoNamespace = (ns) => {
+    if (/^[0-9a-f]{64}$/i.test(ns) || ns.startsWith("cid:"))
+      throw new Error("[AQ] storage namespace cannot be CID-based: " + ns);
     aqDaoNamespace = ns;
   };
   var aqIdbPromise = null;
@@ -7901,51 +7903,6 @@
       req.onerror = () => reject(req.error);
     });
   }
-  var SESSION_DB_NAME = "aqSession";
-  var SESSION_DB_VERSION = 1;
-  var SESSION_STORE_NAME = "session";
-  var SESSION_KEY = "current";
-  var _sessionDbPromise = null;
-  function openSessionDb() {
-    if (_sessionDbPromise) return _sessionDbPromise;
-    _sessionDbPromise = new Promise((resolve, reject) => {
-      const req = indexedDB.open(SESSION_DB_NAME, SESSION_DB_VERSION);
-      req.onupgradeneeded = () => {
-        const db = req.result;
-        if (!db.objectStoreNames.contains(SESSION_STORE_NAME))
-          db.createObjectStore(SESSION_STORE_NAME);
-      };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-    return _sessionDbPromise;
-  }
-  async function sessionSave() {
-    if (!_unlockedSeed) return;
-    const db = await openSessionDb();
-    await new Promise((resolve, reject) => {
-      const t = db.transaction(SESSION_STORE_NAME, "readwrite");
-      const req = t.objectStore(SESSION_STORE_NAME).put(_unlockedSeed.buffer.slice(0), SESSION_KEY);
-      t.oncomplete = () => resolve();
-      t.onerror = () => reject(t.error);
-    });
-  }
-  async function sessionLoad() {
-    try {
-      const db = await openSessionDb();
-      const buf = await new Promise((resolve, reject) => {
-        const t = db.transaction(SESSION_STORE_NAME, "readonly");
-        const req = t.objectStore(SESSION_STORE_NAME).get(SESSION_KEY);
-        req.onsuccess = () => resolve(req.result || null);
-        req.onerror = () => reject(req.error);
-      });
-      if (!buf) return false;
-      _unlockedSeed = new Uint8Array(buf);
-      return true;
-    } catch {
-      return false;
-    }
-  }
   var _unlockedSeed = null;
   function b64decode(s) {
     return Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
@@ -7986,14 +7943,10 @@
     const record = await seedGetInternal();
     if (!record) throw new Error("[AQ] seedUnlock: no seed stored");
     _unlockedSeed = await decryptRecord(record, password);
-    sessionSave().catch(() => {
-    });
   }
   function seedActivate(rawBytes) {
     if (!(rawBytes instanceof Uint8Array)) throw new Error("[AQ] seedActivate: Uint8Array required");
     _unlockedSeed = rawBytes;
-    sessionSave().catch(() => {
-    });
   }
   function seedGetRaw() {
     if (!isPwa && !devMode) throw new Error("[AQ] seedGetRaw: not allowed outside PWA or devMode");
@@ -8933,43 +8886,23 @@ send("AQ_PAGE_READY", { });
     const js = jsRef ? await fetchAssetText(jsRef) : "";
     return { html, css, js, imageBlobUrls };
   }
-  async function loadDaoConfig(daoRef) {
-    const normalized = typeof daoRef === "string" ? daoRef.trim() : daoRef;
-    if (!normalized) throw new Error("[AQ] missing daoConfig");
-    const namespace = typeof normalized === "string" ? normalized : normalized.cid ? "cid:" + normalized.cid : normalized.path;
-    await _loadDaoConfigInternal(normalized, namespace, false);
-  }
-  async function loadGateCfgOnly(gateEntry) {
-    if (!gateEntry || typeof gateEntry !== "object") throw new Error("[AQ] loadGateCfgOnly: invalid entry");
-    let daoRef, namespace;
+  async function resolveGateEntry(gateEntry, caller) {
     if (devMode && typeof gateEntry.path === "string") {
-      daoRef = gateEntry.path;
-      namespace = "gate:" + (gateEntry.tokenId ?? gateEntry.path);
-    } else if (typeof gateEntry.tokenId === "string") {
+      return {
+        daoRef: gateEntry.path,
+        namespace: "gate:" + (gateEntry.tokenId ?? gateEntry.path)
+      };
+    }
+    if (typeof gateEntry.tokenId === "string") {
       const rpcUrls2 = parseRpcConfig(conf?.rpc, devMode);
       const cid = await resolveDaoCid(gateEntry.tokenId, rpcUrls2);
-      daoRef = cid;
-      namespace = "gate:" + gateEntry.tokenId;
-    } else {
-      throw new Error("[AQ] loadGateCfgOnly: entry must have tokenId or path");
+      return { daoRef: cid, namespace: "gate:" + gateEntry.tokenId };
     }
-    await _loadDaoConfigInternal(daoRef, namespace, true);
+    throw new Error("[AQ] " + caller + ": entry must have tokenId or path");
   }
   async function loadGateDao(gateName, gateEntry, pageKey) {
     if (!gateEntry || typeof gateEntry !== "object") throw new Error("[AQ] loadGateDao: invalid entry");
-    let daoRef;
-    let namespace;
-    if (devMode && typeof gateEntry.path === "string") {
-      daoRef = gateEntry.path;
-      namespace = "gate:" + (gateEntry.tokenId ?? gateEntry.path);
-    } else if (typeof gateEntry.tokenId === "string") {
-      const rpcUrls2 = parseRpcConfig(conf?.rpc, devMode);
-      const cid = await resolveDaoCid(gateEntry.tokenId, rpcUrls2);
-      daoRef = cid;
-      namespace = "gate:" + gateEntry.tokenId;
-    } else {
-      throw new Error("[AQ] loadGateDao: entry must have tokenId or path");
-    }
+    const { daoRef, namespace } = await resolveGateEntry(gateEntry, "loadGateDao");
     await _loadDaoConfigInternal(daoRef, namespace, true);
     const gateAssets = await _resolveGatePageAssets(pageKey);
     exposeGateApi();
@@ -8992,7 +8925,7 @@ send("AQ_PAGE_READY", { });
     }
     const rpcUrls2 = parseRpcConfig(conf?.rpc, devMode);
     const cid = await resolveDaoCid(openTokenId2, rpcUrls2);
-    const namespace = "cid:" + cid;
+    const namespace = "tokenId:" + openTokenId2;
     await _loadDaoConfigInternal(cid, namespace, false);
   }
   async function aqRef(category, refPath) {
@@ -9103,7 +9036,7 @@ send("AQ_PAGE_READY", { });
         }
       }
     }
-    for (const field of ["boot", "loader"]) {
+    for (const field of ["loader"]) {
       if (result[field]?.path) {
         overlaySetLabel(`Uploading ${field}\u2026`);
         const resp = await fetch(result[field].path, { cache: "no-store" });
@@ -9162,8 +9095,6 @@ send("AQ_PAGE_READY", { });
   }
   async function runForkCurrentDao(serverUrl, tokenId) {
     const wallet = fromRawSeed(seedGetRaw(), 1e3);
-    navigator.clipboard.writeText(wallet.address).catch(() => {
-    });
     const rawCfg = getDaoCfg();
     if (!rawCfg) throw new Error("DAO config not loaded");
     const processed = await processPathRefs(serverUrl, wallet, JSON.parse(JSON.stringify(rawCfg)));
@@ -9343,11 +9274,11 @@ send("AQ_PAGE_READY", { });
         openDialog(
           "clear",
           "Clear IndexedDB",
-          '<div class="aq-hm-none" style="margin-bottom:4px">T\xF6rli az \xF6sszes helyi adatot (seed, session, storage). Visszavonhatatlan.</div><button class="aq-hm-run" id="aq-hm-run" style="background:#8b2020">T\xF6rl\xE9s</button>'
+          '<div class="aq-hm-none" style="margin-bottom:4px">T\xF6rli az \xF6sszes helyi adatot (seed, storage). Visszavonhatatlan.</div><button class="aq-hm-run" id="aq-hm-run" style="background:#8b2020">T\xF6rl\xE9s</button>'
         );
         dialog.querySelector("#aq-hm-run").addEventListener("click", async () => {
           try {
-            const dbs = await indexedDB.databases?.() ?? [{ name: "aqSeed" }, { name: "aqSession" }, { name: "aqStorage" }];
+            const dbs = await indexedDB.databases?.() ?? [{ name: "aqSeed" }, { name: "aqProtocol" }];
             await Promise.all(dbs.map(
               ({ name }) => new Promise((res, rej) => {
                 const r = indexedDB.deleteDatabase(name);
@@ -9440,7 +9371,7 @@ send("AQ_PAGE_READY", { });
     switchDao: (params) => {
       const daoConfig = params?.daoConfig;
       if (!daoConfig) throw new Error("switchDao: missing daoConfig");
-      return loadDaoConfig(daoConfig);
+      return loadContentDao(typeof daoConfig === "number" ? String(daoConfig) : daoConfig);
     },
     storagePut: (p) => aqStoragePut(p?.name, p?.patch),
     storageGet: (p) => aqStorageGet(p?.name),
@@ -9569,17 +9500,16 @@ send("AQ_PAGE_READY", { });
     try {
       setLocked(true);
       overlayShowLocked(isLocked);
-      const sessionActive = isSeedUnlocked() || await sessionLoad();
-      if (sessionActive) {
+      if (isSeedUnlocked()) {
         teardownGateDao();
       } else {
         await renderGatePage();
       }
       if (openTokenId) await loadContentDao(openTokenId);
-      initHostMenu();
     } catch (e) {
       console.error(e);
     } finally {
+      initHostMenu();
       setLocked(false);
       overlayHide();
     }
@@ -9588,6 +9518,7 @@ send("AQ_PAGE_READY", { });
     const boot = async () => {
       setLocked(true);
       overlayShowLocked(isLocked);
+      let seedGenFlow = false;
       try {
         const gateName = await pickGateName();
         const gates = getProtocolCfg().gates;
@@ -9595,20 +9526,16 @@ send("AQ_PAGE_READY", { });
         if (!gateEntry) throw new Error("[AQ] gate not found: " + gateName);
         const hasSeed = await seedExists();
         if (!hasSeed) {
+          seedGenFlow = true;
           await loadGateDao(gateName, gateEntry, "seedGen");
           return;
         }
-        const sessionActive = isSeedUnlocked() || await sessionLoad();
-        if (!sessionActive) {
-          await loadGateDao(gateName, gateEntry);
-        } else if (devMode) {
-          await loadGateCfgOnly(gateEntry);
-        }
+        await loadGateDao(gateName, gateEntry);
         if (openTokenId) await loadContentDao(openTokenId);
-        initHostMenu();
       } catch (e) {
         console.error(e);
       } finally {
+        if (!seedGenFlow) initHostMenu();
         setLocked(false);
         overlayHide();
       }

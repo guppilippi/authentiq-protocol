@@ -573,6 +573,35 @@ Elvek: token-pool szétválasztás (Claude + M3), minimális fogyasztás, körny
 - SETUP: orchestrator implementáció (CLAUDE.md, plan/process.md, agent-ctx struktúra, task.md template, verifier skeleton)
 - Fable 5 audit findings tárgyalása — mikor indul (AUDIT módban)?
 
+## 2026-06-14 — PLAN: Pi újraépítés Alpine-ra
+
+**Döntések:**
+- Alpine Linux választva egységes stacknek (Pi ARM64 + VPS + PC x86_64)
+- WireGuard váltás tervezett (OpenVPN helyett) — modernebb, egyszerűbb
+- letsencrypt: certbot újraissue az új szerveren (kulcsmásolás helyett)
+
+**Elvégzett:**
+- Pi USB boot engedélyezve: `BOOT_ORDER=0xf41` (`rpi-eeprom-config`)
+- Alpine 3.24.1 aarch64 flashelve 1TB SSD-re (balenaEtcher)
+- Pi config backup Desktop/pi-backup/: nginx config, aq-server.service, openvpn/server.conf
+- SD kártya érintetlen marad (fallback)
+
+**Következő (holnap):**
+- Monitor + billentyűzet → Pi fizikai hozzáférés → `setup-alpine` → SSH engedélyezés
+- Setup scriptek: WireGuard, nginx, Node.js (NodeSource), AQ server, certbot, systemd
+
+## 2026-06-11 — DOCSYNC + DEVp + DEVs: Fable 5 audit lezárás
+
+**DOCSYNC** (F02/F06/F07/F08/F09/F10/F11/F12/F14/F16): 4 doc fájl frissítve — session store eltávolítás, gate namespace kanonikalizálás, min. tagszám pontosítás, duplikáció-csökkentés.
+
+**DEVp** (F03/F04/F15/F17): `aqProtocolLoader.js` — halott `loadGateCfgOnly` ág törölve, `initHostMenu` double-call fix (`seedGenFlow` flag); `aqAssetFetch.js` komment; `aqLoaderCore.js` `resolveGateEntry` helper kiemelve. Guide §4.3/§16.1/§19.3 szinkronizálva.
+
+**DEVs** (F18): `util.js` — `CID_RE {64}`, `TOKENID_RE`, `SEL_getSwarmHash`, `parseEthCallTokenId()` exportálva; `cidServer.js` CID_RE `{64,128}` → `{64}`; `rpcServer.js` + `aqServer.js` eth_call refaktor + 405 fix.
+
+**Lezárva:** `runtime/audit_session.md` törölve — minden finding rendezve.
+
+---
+
 ## 2026-06-11 — AUDIT: full audit Fable 5 (18 finding)
 
 **Elfogadva (kód — DEVs later):**
@@ -609,3 +638,36 @@ Elvek: token-pool szétválasztás (Claude + M3), minimális fogyasztás, körny
 - `.gitignore`: `AI-ctx/runtime/agent-ctx/` + `test-minimax/` hozzáadva
 - SETUP tab megnyitva — tesztkérdésre helyes választ adott (érti a kontextust)
 - Chat local tárolás téma ejtve (orchestrator architektúrában inherensen megoldott)
+
+## 2026-06-12 — SETUP: Orchestrator architektúra teljes tervezés
+
+**Megállapodott döntések:**
+- Central orchestrator: Pi 4 4GB, always-on, SSH elérés (Windows Terminal + OpenSSH, VPN kívülről)
+- Szinkron réteg: WEB2 (aqServer) — Swarm opció marad, nem szükséges
+- Swarm write: csak task completion után (közbülső crash újragenerálható)
+- Linux váltás: nem égető (SSH-n elérhető Pi); Debian dual boot már megvan PC-n
+- USB SSD ajánlott Pi-re (SD kártya írás-terhelés alatt meghal)
+- Fejlesztés: `ai-ctx-test/` mappában párhuzamosan, átálláskor rename
+
+**Subagent struktúra (tervezés, implementáció következő session):**
+- Mappa: `subagent/` (nem `agent-ctx/`)
+- `subagent/config.json` = registry, protokoll-kompatibilis `ref` séma
+- `subagent/<random-hex>/config.json` = per-subagent, `ref: { "path": "...", "url": "..." }`
+- WEB2 URL a `url` mezőben (aqServer CID endpoint)
+- Config séma: agent-agnosztikus (PWA is olvassa majd)
+
+**Modell-stratégia bővítve:**
+- Qwen3.6 Plus: komplex execution alternatíva Opus 4.8 helyett (1M ctx, olcsóbb) — OpenRouter
+- GPT-5.4 Mini: DEVs/bash ops (gyors, olcsó) — OpenRouter
+- M3: emberi output OK, orchestration JSON-hoz NEM (verbose) — strict format prompt kötelező
+- OpenRouter: célirány nem-Claude modelleknél (egy key, sok modell)
+
+**Jövőbeli irányok rögzítve:**
+- Voice interface: telefon → HU szóbeli → Voice Agent → task feed → Pi orchestrator
+- PWA-driven workflow: task creator DAO → Swarm/WEB2 feed → Claude Code olvas
+- Web2 verifier: WebFetch damjanch.mooo.com ellen (deploy után) — korlátozott de valós
+- Playwright: automatikus UI teszt jövőbeli scope
+- Git repo szétválasztás: protokoll / ai-ctx / server
+
+**Nyitott (következő SETUP session):**
+- `ai-ctx-test/` struktúra implementáció: subagent mappa, registry séma, plan/process.md orchestrator logika, CLAUDE.md bővítés

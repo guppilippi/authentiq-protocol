@@ -24,9 +24,10 @@ Data root: `/var/www/sftp/szoke/sftp/sftp/data/`
 
 1. ~~`openTokenId` opcionálissá + URL param (`?token=<tokenId>`) olvasás~~ — kész
 2. ~~Production `index.html` deploy + Pixel 7 browser teszt~~ — kész; mobile CSS javítva
-3. PWA: `manifest.json` + ikonok + `sw.js` → Pi deploy
-3. Real device teszt (Pixel 7, damjanch.mooo.com) — standalone mód + WebAuthn-PRF ellenőrzés
-4. WEB2 GC: `POST /aq/retire` endpoint + periodic orphan scan
+3. **Pi újraépítés (folyamatban):** Alpine 3.24.1 SSD-re flashelve; holnap monitor+bil → `setup-alpine` → SSH → WireGuard + nginx + AQ server scriptek
+4. PWA: `manifest.json` + ikonok + `sw.js` → Pi deploy (Pi újraépítés után)
+5. Real device teszt (Pixel 7, damjanch.mooo.com) — standalone mód + WebAuthn-PRF ellenőrzés
+6. WEB2 GC: `POST /aq/retire` endpoint + periodic orphan scan
 
 ## Tervezési döntések (Plan-szinkronra vár)
 
@@ -172,6 +173,33 @@ Same-device popup: `window.open('https://pwa-url/sign?req=...', 'aq', 'popup')` 
 
 ---
 
+## Strukturális szándékok (jövőbeli)
+
+### Git repo szétválasztás
+Jelenlegi: egyetlen repo (protokoll + AI-ctx + server). Tervezett szétválasztás:
+- **protokoll** — `loader/src/`, `js/`, `docs/`, `demo/`
+- **ai-ctx** — `AI-ctx/`, `.claude/`
+- **server** — `server/`, `scripts/`
+
+Határok még pontosítandók (pl. `demo/` hova tartozik). PLAN módban kidolgozandó, implementáció genesis előtti időszakban.
+
+### Orchestrator infrastruktúra
+- **Hely:** Raspberry Pi 4 (4GB RAM) — central, always-on
+- **Elérés:** SSH (Windows Terminal + OpenSSH; VPN külső eléréshez)
+- **Linux:** Debian dual boot már megvan PC-n; Linux váltás nem égető (SSH-n elérhető Pi)
+- **Tárhely:** USB SSD ajánlott Pi-n (SD kártya hosszú távon megbízhatatlan folyamatos írással)
+- **Szinkron réteg:** WEB2 (aqServer, `damjanch.mooo.com`) — Swarm opció marad, nem szükséges
+- **Subagent workspace:** lokál (gyors) + WEB2 backup (async, nem blokkolja a munkát)
+- **Swarm write:** csak task completion után — közbülső crash újragenerálható
+- **Fejlesztés:** `ai-ctx-test/` mappában párhuzamosan, átálláskor rename
+
+### PWA voice interface (jövőbeli)
+- Telefon → szóbeli HU prompt → Voice Agent → task feed → Pi orchestrator
+- Prerequisite: task creator DAO a PWA-ban + Swarm/WEB2 feed mechanizmus
+- STT: Whisper (HU jó), LLM: Claude HU system prompttal, TTS: Google/ElevenLabs
+
+---
+
 ## Függő témák (következő session)
 
 ### i18n fejlesztési utasítások
@@ -248,16 +276,19 @@ Orchestrator → spec (task.md) → Execution subagent
 
 **Modell-stratégia (rögzítve):**
 
-| Réteg | Modell | Indok |
-|---|---|---|
-| Orchestrator | Sonnet 4.6 | Alapértelmezett |
-| Execution — egyszerű | Sonnet 4.6 | Sebesség + ár |
-| Execution — komplex, multi-fájl | Opus 4.8 | Csak indokolt esetben |
-| Verifier — kód | Script (nincs modell) | Determinisztikus |
-| Verifier — doksi/terv | M3 (MiniMax) | Más token-pool; CC-ből natívan fut |
-| AUDIT — security | Mythos / Fable 5 | Generációs ugrás security területen |
+| Réteg | Modell | API | Indok |
+|---|---|---|---|
+| Orchestrator | Sonnet 4.6 | Anthropic | Szigorú instrukció-követés, JSON-megbízható |
+| Execution — egyszerű | Sonnet 4.6 | Anthropic | Sebesség + ár |
+| Execution — komplex, nagy context | Opus 4.8 → Qwen3.6 Plus | Anthropic / OpenRouter | Qwen: 1M ctx, olcsóbb; tapasztalat alapján döntendő |
+| Execution — DEVs/bash/szerver ops | Sonnet 4.6 → GPT-5.4 Mini | Anthropic / OpenRouter | GPT-mini: gyors, pontos terminál parancsokhoz |
+| Verifier — kód | Script | — | Determinisztikus |
+| Verifier — doksi/terv | M3 (MiniMax) | MiniMax / OpenRouter | Más token-pool; **strict output format kötelező** (verbose hajlam) |
+| AUDIT — security | Fable 5 | Anthropic | Generációs ugrás security területen |
 
-Elvek: minimális token-fogyasztás, környezetterhelés csökkentése, token-pool szétválasztás (Claude + M3). Mythos/Fable 5 dedikált audit eszköz, nem általános subagent.
+**OpenRouter:** egy API endpoint, sok modell (OpenAI-kompatibilis, pay-per-token). Célirány nem-Claude modelleknél (M3, Qwen, GPT-mini). MiniMax direct key most megvan — OpenRouter egységesíti majd.
+
+Elvek: minimális token-fogyasztás, token-pool szétválasztás (Claude + OpenRouter), M3 verbosity = emberi outputhoz jó, orchestration JSON-hoz nem.
 
 SETUP módban implementálandó (gitignore kész, CLAUDE.md bővítés, process.md handoff formátum).
 
