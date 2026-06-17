@@ -671,3 +671,148 @@ Elvek: token-pool szétválasztás (Claude + M3), minimális fogyasztás, körny
 
 **Nyitott (következő SETUP session):**
 - `ai-ctx-test/` struktúra implementáció: subagent mappa, registry séma, plan/process.md orchestrator logika, CLAUDE.md bővítés
+
+## 2026-06-14 — PLAN: Pi Alpine headless setup
+
+**Elvégzett:**
+- apkovl felépítve: shadow (root pw hash), sshd_config, hostname, network/interfaces, local.d/00-setup.start, runlevels/default/local+sshd, apk/world
+- `00-setup.start`: busybox `udhcpc`-vel hozza fel eth0-t → boot partíció detektálás → `apk add openssh` → sshd start
+- Diagnózis: Alpine bootol (zöld LED, network carrier up), de DHCP soha nem ment ki — apkovl valószínűleg nem töltődött be (alpine_dev hiánya vagy init probléma)
+
+**Következő (kábel megvan):**
+- Micro HDMI kábel: Aréna MediaMarkt, raktáron (ISY IHD-9041, 3699 Ft)
+- Kábellel: monitor + bil → Pi → `setup-alpine` interaktív futtatás → SSH engedélyezés → WireGuard + nginx + AQ server
+
+## 2026-06-14 — PLAN: modell-stratégia áttekintés
+
+**MiMo Code:** Claude Code vetélytárs CLI tool (Xiaomi, v0.1.0, 2026-06-10) — open source, OpenCode fork; bundled MiMo-V2.5-Pro (1T MoE, 1M ctx); "ingyenes" hozzáférés bizonytalan (docs fizetős accountot kér); self-reported benchmark.
+
+**MiMo modellek OpenRouteren:**
+- MiMo-V2-Flash: $0.10/$0.30/M, 262K ctx, SWE-bench #1 open-source, hybrid thinking
+- MiMo-V2.5: $0.14/$0.28/M, 1M ctx, omnimodal
+- MiMo-V2.5-Pro: $0.435/$0.87/M, 1M ctx, flagship
+
+**OpenRouter vs direct API key:** ugyanaz a mechanizmus (ANTHROPIC_BASE_URL override), de OpenRouter = egyetlen key/billing sok modellhez (+kis margin); direct key = provider natív ár, külön account.
+
+**Jelenlegi stack elegendő:**
+- Claude Pro: teljes jelenlegi workflow (orchestrator + execution + Opus + Fable)
+- M3 API key: verifier rétegre (orchestrator implementáció után aktiválódik)
+- Következő lépés: orchestrator SETUP; utána OpenRouter small top-up ($10-20) ha execution subagent kell
+
+## 2026-06-14 — PLAN: Pi Alpine setup + protokoll tervezés
+
+**Pi Alpine sys install kész:**
+- Pi Imager v2.0.7 → Alpine Linux 3.24.1 (2026-06-13) → SSD sys install
+- `/etc/network/interfaces` kézzel létrehozva (setup-alpine nem mentette — eth0 nem volt UP a setup során)
+- `rc-update add networking default` → boot-safe
+- SSH kulcs beállítva, password login: ki
+- SSH működik PC-ről
+
+**Következő Pi lépések:** WireGuard, nginx, Node.js, AQ server, rclone + inotify-tools (Drive sync file watcherrel)
+
+**Protokoll tervezési döntések (rögzítendő state.md-be):**
+
+- **Lazy auth / publikus tartalom:** protocol-szintű váltás — `loadGateDao` nem kötelező első lépés; tartalom publikus, gate csak action-nél jelenik meg; DAO deklarálja mi auth nélkül elérhető
+- **AI wallet delegáció:** orchestrator saját wallettel rendelkezik; human wallet → permission grant → AI wallet; AI csak delegált scope-on belül ír alá
+- **CLI seed unlock — SSH kliens kulcs mint PRF:** Pi fix challenge-t tárol; SSH kliens aláírja privát kulcsával; `HKDF(signature, "aq-cli-v1")` → unlock key → seed decrypt; kliens kulcs nem hagyja el PC-t → lopás + kikapcs = locked; ez WebAuthn-PRF SSH-on keresztül
+- **AuthentiQ CLI vízió:** browser loader CLI-megfelelője; DAO config → script futtatás; lazy auth scriptekre is (public vs auth-required commands); első nem-browser protokoll implementáció
+
+## 2026-06-15 — PLAN: CLI architektúra + protokoll rétegek
+
+**Rögzített döntések (state.md-be kerültek):**
+- CLI bundle: `loader/src/` modulok, Node.js esbuild target, külön entry point; boot szétválasztás marad (immutable CID)
+- Disk cache: `~/.aq/cache/<cid>` — CID immutable, nincs invalidálás
+- CLI DAO: identitás DAO hozza létre template-ből; hibrid (funkció + opcionális seed); neve TBD
+- CLI seed derivált: `HKDF(identity_seed, "aq-cli-v1", machine_id)` — reprodukálható, SSH kulccsal titkosítva tárolva; fenyegetési modell: fizikai + root szükséges
+- P2P kommunikáció: browser↔CLI = WebSocket (CLI szerver); browser↔browser = WebRTC (REL, jövő); CLI↔CLI = TCP/WebSocket
+- Script futtatás: kompozit (CID-hivatkozott lépések), csomagkezelő alapú platform kulcsok (`apk`/`apt`/`winget`/`brew`) + `default` fallback; verzió a scriptben
+- Protokoll rétegek: browser=ember, CLI=API/AI, Android=P2P daemon (nem telepítget)
+- AI assistant: CLI-n fut, CID-alapú template olvasás, DAO assembly, eredmény WebSocket-en browserbe → user aláír; function DAO; megosztható CLI, kis modell elegendő
+- P2P storage Linuxon: CLI telepíti és futtatja (azonos eredmény mint Android natív app)
+
+## 2026-06-15 — PLAN: Pi Alpine setup — awall + WireGuard
+
+**Elvégzett:**
+- awall: `policy.json` megírva + aktiválva; `vpn` zóna (`wg0`) hozzáadva INPUT ACCEPT-tel; `iptables` boot service felvéve
+- WireGuard Pi: `wireguard-tools` telepítve, kulcspár generálva, `wg0.conf` létrehozva (PostUp/PostDown MASQUERADE + FORWARD), `wg-quick.wg0` boot service felvéve, `wg-quick up wg0` OK
+- WireGuard PC: Windows app telepítve, tunnel config (10.0.0.2/32, AllowedIPs: 10.0.0.1/32 + 192.168.1.0/24, PersistentKeepalive: 25)
+- Ping 10.0.0.2 Pi-ről OK; másik hálózatból VPN-nel ping OK
+
+**Nyitott:**
+- SSH Pi-ra (10.0.0.1:2212) via WireGuard: Connection timed out — `wg show` Pi-n + helyi vs külső hálózat tisztázása (NAT hairpin gyanú)
+- RDP (Windows Firewall) — később
+
+**Következő:**
+1. `wg show` Pi-n — fut-e wg0, látja-e a peer handshake-et
+2. Ha helyi hálózaton tesztelt: NAT hairpin probléma (router nem loopol vissza) — külső hálózatról kell tesztelni
+
+## 2026-06-15 — PLAN: Pi Alpine deploy tervezés + nginx + certbot
+
+**Elvégzett Pi-n:**
+- `community` repo engedélyezve, `apk add nginx nodejs npm certbot certbot-nginx curl`
+- nginx config: `/etc/nginx/http.d/authentiq.conf` (backup alapján, új path, tg-webhook location)
+- certbot: cert kiadva, HTTPS él (`damjanch.mooo.com`, lejár 2026-09-13)
+- Node 24.16.0, nginx 1.30.2
+
+**Döntések:**
+- App struktúra: `/opt/authentiq/server/` (server bundle + data) + `/opt/authentiq/html/` (statikus)
+- Server esbuild bundle: `loader/node_modules/.bin/esbuild` → `server/js/aqServer.js` (új)
+- Nincs npm install Pi-n — bundle tartalmazza az ethers-t
+- Telegram: Pi-only, nem repo része
+- Git split előkészítés: lokálisan `server/js/` mappa
+
+**`deployServer.ps1` frissítés (megírva, még nem alkalmazva):**
+- esbuild lokális build → `server/js/aqServer.js`
+- pscp + plink: `mkdir -p /opt/authentiq/server/data /opt/authentiq/html` + deploy + rc-service restart
+
+**Elvégzett (folytatásban):**
+- `deployServer.ps1`: scp/ssh (OpenSSH), esbuild bundle (server/js/), root user, guppilippi kulcs
+- `aqServer.js`: `requireDir` törölve — server maga hozza létre a data/ struktúrát
+- Server deploy sikeres, AQ fut Pi-n, data/ auto-létrehozva
+- Döntés: `/opt/authentiq/server/html/` (nem párhuzamos html/) — PWA web2 belépési pont a server repo része
+
+**Következő (folytatáskor):**
+1. Nginx config `root` → `/opt/authentiq/server/html` + nginx reload
+2. `index.html` placeholder SSH heredoc-kal
+3. Telegram setup (Pi-only, nem repo)
+4. Cron setup (certbot renew + aq-upgrade + boot notify)
+5. Commit: aqServer.js (requireDir törlés) + deployServer.ps1
+
+## 2026-06-15 — PLAN: Pi SSD sebesség + WireGuard SSH fix
+
+**SSD sebesség:** `dd` teszt — írás 599 MB/s, olvasás ~1.2 GB/s; USB 3.0 rendben, kábel OK.
+
+**WireGuard SSH debug — root cause-ok:**
+1. `wg-quick.wg0` service létezett + `default` runlevelben volt, de nem futott — `rc-service wg-quick.wg0 start` fixálta
+2. Router port forward: UDP 1194 (OpenVPN) → 51820 (WireGuard) cserélve
+3. Felhasználó 10.0.0.2-re próbált SSH-zni (saját kliens WG IP) — Pi WG IP-je 10.0.0.1
+
+**Eredmény:** SSH `10.0.0.1:2212` via WireGuard külső hálózatról OK; `192.168.1.76` (lokális IP) is elérhető WG-n át (AllowedIPs tartalmazza a 192.168.1.0/24 alhálózatot).
+
+**state.md:** Pi setup (3. lépés) lezárva.
+
+## 2026-06-15 — PLAN: Pi setup befejezés — Telegram + cron
+
+**Elvégzett:**
+- Nginx root: `/opt/authentiq/html` → `/opt/authentiq/server/html` (user SFTP)
+- `index.html` placeholder (user)
+- Telegram: `/root/.tg.env` (TG_TOKEN + TG_CHAT=7419747113), `/usr/local/bin/tg-notify` (curl wrapper), `tg-boot` OpenRC service (need net, nem local.d — hálózat-függőség)
+- `/etc/periodic/daily/system-update`: apk upgrade (Upgrading check) + nginx reload + aq-server restart + tg-notify hiba/frissítés esetén + Alpine minor verzió check (wget latest-releases.yaml)
+- Telegram webhook: ejtve (nem kell)
+- Pending commit: aqServer.js (requireDir törölve) + deployServer.ps1 (új flow) + .gitignore (server/js/) — git repo szétválasztás után
+
+## 2026-06-16/17 — Drive sync + Claude Code CLI Pi-re
+
+**Elvégzett:**
+- Claude Code CLI telepítve + autentikálva Pi-n
+- rclone + inotify-tools + git telepítve Pi-n
+- rclone Google Drive remote konfigurálva (saját OAuth client_id/secret — nem megosztott kvóta); shortcut feloldódik: `gdrive:AI projects content/AuthentiQ`
+- rclone bisync `/root/AuthentiQ` ↔ Drive, 2 perces cron, flock átfedés ellen, tg-notify hibára
+- `/root/AuthentiQ` kezdeti resync kész (tartalom lent van Pi-n)
+- crond restart szükséges crontab szerkesztés után (Alpine busybox crond nem auto-reload)
+
+**Döntés — Drive sync ejtve, SSH tunnel irány:**
+- Conflict teszt: Drive "Computers" backup egyirányú/gyengébb konfliktuskezelés → néma felülírás, nincs conflict-copy
+- Megoldás: Pi = egyetlen munkamásolat; PC/telefon SSH-n éri el; dev szerverek a Pi-n futnak; SSH tunnel (`-L 8080:localhost:8080 -L 8081:localhost:8081 -L 8082:localhost:8082`) biztosítja hogy a böngésző localhost-ként látja → devMode (local path, nem CID) működik
+- rclone megmarad opcionális egyirányú Pi→Drive biztonsági mentésnek (nem kétirányú szinkron)
+- bisync cron kommentezve (hacsak backup célra újra nem kell)

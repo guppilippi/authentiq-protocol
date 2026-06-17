@@ -1,28 +1,31 @@
-$KEY     = "C:\Projects\rebelware.ppk"
+$KEY     = "C:\Projects\guppilippi"
 $PI      = "192.168.1.76"
-$USER    = "momoa"
+$USER    = "root"
 $PORT    = "2212"
-$DEST    = "/var/www/sftp/szoke/sftp/sftp/"
-$SERVICE = "aq-server.service"
+$DEST    = "/opt/authentiq/server/"
+$SERVICE = "aq-server"
 
-$files = @(
-    "server\aqServer.js",
-    "server\aqAuth.js",
-    "server\aqData.js",
-    "server\util.js"
-)
+Write-Host "[deploy] Build..."
+New-Item -ItemType Directory -Force "server\js" | Out-Null
+$env:NODE_PATH = Resolve-Path "loader\node_modules"
+& "loader\node_modules\.bin\esbuild" "server\aqServer.js" --bundle --platform=node --format=esm "--outfile=server\js\aqServer.js"
+Remove-Item Env:\NODE_PATH
+if (-not $?) {
+    Write-Host "[deploy] Build hiba"
+    Read-Host "Enter: bezaras"
+    exit 1
+}
 
-Write-Host "[deploy] Feltoltes /tmp-be..."
-& "pscp" -P $PORT -i $KEY @files "${USER}@${PI}:/tmp/"
+Write-Host "[deploy] Feltoltes..."
+& "scp" -P $PORT -i $KEY -o StrictHostKeyChecking=accept-new "server\js\aqServer.js" "${USER}@${PI}:/tmp/"
 if (-not $?) {
     Write-Host "[deploy] SCP hiba"
     Read-Host "Enter: bezaras"
     exit 1
 }
 
-Write-Host "[deploy] Masolas + ujrainditas..."
-& "plink" -ssh -P $PORT -i $KEY -l $USER $PI `
-    "sudo cp /tmp/aqServer.js /tmp/aqAuth.js /tmp/aqData.js /tmp/util.js $DEST && sudo systemctl restart $SERVICE && sudo rm -f /tmp/aqServer.js /tmp/aqAuth.js /tmp/aqData.js /tmp/util.js && echo '[deploy] Kesz.'"
+Write-Host "[deploy] Deploy..."
+& "ssh" -p $PORT -i $KEY -o StrictHostKeyChecking=accept-new "${USER}@${PI}" "mkdir -p $DEST && cp /tmp/aqServer.js $DEST && rc-service $SERVICE restart && rm -f /tmp/aqServer.js && echo '[deploy] Kesz.'"
 if (-not $?) {
     Write-Host "[deploy] Hiba"
     Read-Host "Enter: bezaras"

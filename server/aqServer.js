@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { resolveDataRoot, requireDir, readBody, logRequest, logStartup, DAO_CONTRACT, CID_RE, TOKENID_RE, parseEthCallTokenId } from "./util.js";
+import { resolveDataRoot, readBody, logRequest, logStartup, DAO_CONTRACT, CID_RE, TOKENID_RE, parseEthCallTokenId } from "./util.js";
 import { initData, isWhitelisted, mintToken, setTokenCid, storeAsset, readBlob, readTokenCid } from "./aqData.js";
 import { checkTimestamp, recoverWallet, msgMintToken, msgSetSwarmHash, msgUploadAsset } from "./aqAuth.js";
 
@@ -8,7 +8,6 @@ const LABEL      = "AQS";
 const MAX_UPLOAD = Number(process.env.AQ_MAX_UPLOAD) || 10 * 1024 * 1024;
 
 const dataRoot = resolveDataRoot(import.meta.url);
-requireDir(dataRoot, "data root");
 await initData(dataRoot);
 
 function corsHeaders(res) {
